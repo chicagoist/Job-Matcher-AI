@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Job Matcher – Einstellungen</title>
+    <link rel="stylesheet" href="options.css" />
+  </head>
+  <body>
+    <main class="jm-options">
+      <h1>Einstellungen</h1>
+
+      <section class="jm-card">
+        <h2>Gemini-API-Schlüssel</h2>
+        <p class="jm-hint">
+          Der Schlüssel wird ausschließlich lokal in deinem Browser gespeichert und nur an
+          <code>generativelanguage.googleapis.com</code> gesendet.
+        </p>
+        <label class="jm-field">
+          <span>API-Schlüssel</span>
+          <input id="apiKey" type="password" autocomplete="off" spellcheck="false" />
+        </label>
+        <div class="jm-row">
+          <button id="saveKey" class="jm-btn jm-btn--primary" type="button">Speichern</button>
+          <button id="clearKey" class="jm-btn" type="button">Schlüssel entfernen</button>
+          <span id="keyStatus" class="jm-status"></span>
+        </div>
+      </section>
+
+      <section class="jm-card">
+        <h2>Modell</h2>
+        <label class="jm-field">
+          <span>Gemini-Modell</span>
+          <select id="model">
+            <option value="gemini-2.5-flash">gemini-2.5-flash (schnell, empfohlen)</option>
+            <option value="gemini-2.5-pro">gemini-2.5-pro (gründlicher)</option>
+            <option value="gemini-2.0-flash">gemini-2.0-flash</option>
+          </select>
+        </label>
+      </section>
+
+      <section class="jm-card">
+        <h2>Schwellwert für das Anschreiben</h2>
+        <p class="jm-hint">
+          Ab dieser Bewertung (1–10) wird automatisch ein Anschreiben erstellt.
+        </p>
+        <label class="jm-field">
+          <span>Schwellwert: <strong id="thresholdLabel">8</strong>/10</span>
+          <input id="threshold" type="range" min="1" max="10" step="1" />
+        </label>
+      </section>
+
+      <section class="jm-card">
+        <h2>Lebenslauf</h2>
+        <p id="cvInfo" class="jm-hint">Kein Lebenslauf hochgeladen.</p>
+        <div class="jm-row">
+          <label for="optionsFileInput" class="jm-btn" id="uploadCvLabel">Lebenslauf hochladen</label>
+          <input id="optionsFileInput" type="file" accept=".pdf" />
+          <button id="clearCv" class="jm-btn" type="button">Lebenslauf entfernen</button>
+        </div>
+      </section>
+
+      <section class="jm-card">
+        <h2>Verlauf</h2>
+        <p class="jm-hint">Die letzten Analysen werden ausschließlich lokal gespeichert.</p>
+        <ul id="history" class="jm-history"></ul>
+        <div class="jm-row">
+          <button id="clearHistory" class="jm-btn" type="button">Verlauf leeren</button>
+        </div>
+      </section>
+    </main>
+    <script src="options.js"></script>
+  </body>
+</html>

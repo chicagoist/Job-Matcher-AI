@@ -1,0 +1,157 @@
+import type { AnalysisResult, HistoryEntry } from "../../shared/types.js";
+import { DEFAULTS } from "../../shared/constants.js";
+import { dataUrlToBase64, detectMime, cryptoRandomId } from "../../shared/utils.js";
+import { callGemini, type GeminiPart } from "./gemini-client.js";
+import { SYSTEM_PROMPT, buildJobAnalysisPrompt } from "./prompts.js";
+import { parseAnalysis } from "./result-parser.js";
+import {
+  MissingApiKeyError,
+  MissingCvError,
+  GeminiBadRequestError,
+} from "./errors.js";
+import { getApiKey, getCv, getModel, getThreshold, appendHistory } from "../../shared/storage.js";
+import { extractFromDocument } from "./job-extractor.js";
+
+export interface AnalyzeArgs {
+  tabId: number;
+  jobText?: string;
+  jobSource?: string;
+}
+
+export async function analyzeJob(args: AnalyzeArgs): Promise<{
+  result: AnalysisResult;
+  model: string;
+  threshold: number;
+}> {
+  const apiKey = await getApiKey();
+  if (!apiKey) throw new MissingApiKeyError();
+
+  const cv = await getCv();
+  if (!cv) throw new MissingCvError();
+
+  const [model, threshold] = await Promise.all([getModel(), getThreshold()]);
+
+  const job = await resolveJobText(args);
+
+  const userParts: GeminiPart[] = [
+    { text: buildJobAnalysisPrompt(threshold) },
+    { text: `STELLENANZEIGE (Quelle: ${job.source || "Unbekannt"}):\n${job.text}` },
+    {
+      inline_data: {
+        mime_type: detectMime(cv.dataUrl),
+        data: dataUrlToBase64(cv.dataUrl),
+      },
+    },
+    { text: "Hinweis: Der Lebenslauf wurde als PDF-Datei oben angehängt." },
+  ];
+
+  const response = await callGemini({
+    apiKey,
+    model,
+    systemInstruction: SYSTEM_PROMPT,
+    userParts,
+  });
+
+  const result = parseAnalysis(response.text);
+
+  const entry: HistoryEntry = {
+    id: cryptoRandomId(),
+    createdAt: Date.now(),
+    score: result.score,
+    language: result.language,
+    jobTitle: job.title,
+    company: job.company,
+    coverLetter: result.coverLetter,
+  };
+  await appendHistory(entry);
+
+  return { result, model: response.model, threshold };
+}
+
+export async function solveAudio(audioDataUrl: string, mimeType: string): Promise<{
+  text: string;
+  model: string;
+}> {
+  const apiKey = await getApiKey();
+  if (!apiKey) throw new MissingApiKeyError();
+
+  const model = await getModel();
+
+  const userParts: GeminiPart[] = [
+    {
+      text: "Du bist ein hilfreicher Assistent. Beantworte die nachfolgende Sprachfrage des Nutzers kurz, präzise und auf Deutsch.",
+    },
+    {
+      inline_data: {
+        mime_type: mimeType || "audio/webm",
+        data: dataUrlToBase64(audioDataUrl),
+      },
+    },
+  ];
+
+  const response = await callGemini({
+    apiKey,
+    model,
+    systemInstruction: "Antworte immer auf Deutsch, sachlich und freundlich.",
+    userParts,
+    maxOutputTokens: 1024,
+    temperature: 0.6,
+  });
+
+  return { text: response.text, model: response.model };
+}
+
+async function resolveJobText(args: AnalyzeArgs): Promise<{
+  text: string;
+  source: string;
+  title?: string;
+  company?: string;
+}> {
+  if (args.jobText && args.jobText.trim().length > 0) {
+    return { text: args.jobText.slice(0, DEFAULTS.maxJobTextChars), source: args.jobSource ?? "" };
+  }
+  const results = await chrome.scripting.executeScript({
+    target: { tabId: args.tabId },
+    func: (maxChars: number) => {
+      const w = window;
+      const d = document;
+      const source = w.location.hostname.toLowerCase();
+      const title =
+        (d.querySelector("h1")?.textContent ?? d.title ?? "").trim() || undefined;
+      const company = extractCompany();
+      const text = (() => {
+        for (const sel of [
+          "main",
+          "article",
+          "[role='main']",
+          "[itemprop='description']",
+          ".job-description",
+          "#job-description",
+        ]) {
+          const el = d.querySelector(sel) as HTMLElement | null;
+          if (el) {
+            const t = (el.innerText ?? "").trim();
+            if (t.length >= 200) return t.slice(0, maxChars);
+          }
+        }
+        return ((d.body as HTMLElement | null)?.innerText ?? "").slice(0, maxChars);
+      })();
+      function extractCompany(): string | undefined {
+        const og = d.querySelector('meta[property="og:site_name"]');
+        const v = og?.getAttribute("content");
+        return v && v.trim().length > 0 ? v.trim() : undefined;
+      }
+      return { text, source, title, company };
+    },
+    args: [DEFAULTS.maxJobTextChars],
+  });
+  const r = results[0]?.result as
+    | { text: string; source: string; title?: string; company?: string }
+    | undefined;
+  if (!r) {
+    throw new GeminiBadRequestError("Konnte den Text der Seite nicht lesen.");
+  }
+  return r;
+}
+
+export { extractFromDocument };

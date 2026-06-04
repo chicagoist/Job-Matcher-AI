@@ -1,0 +1,242 @@
+:root {
+  color-scheme: light dark;
+  --purple: #772953;
+  --purple-dark: #5a1f3f;
+  --orange: #e95420;
+  --orange-soft: #f37b51;
+  --orange-glow: rgba(233, 84, 32, 0.35);
+  --bg: #ffffff;
+  --fg: #2c001e;
+  --muted: #aea79f;
+  --border: #d8d4d0;
+  --card: #f7f7f7;
+  --danger: #c62828;
+  --success: #2e7d32;
+  --radius: 12px;
+  --radius-sm: 6px;
+  --transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  --font: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #2c001e;
+    --fg: #f7f7f7;
+    --muted: #aea79f;
+    --border: #4a2740;
+    --card: #3b0a2c;
+    --purple: #f37b51;
+    --orange: #f37b51;
+    --orange-glow: rgba(243, 123, 81, 0.25);
+    --danger: #ef5350;
+    --success: #81c784;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--fg);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.jm-options {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 32px 20px 80px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+h1 {
+  margin: 0;
+  font-size: 26px;
+  font-weight: 500;
+  color: var(--purple);
+}
+
+@media (prefers-color-scheme: dark) {
+  h1 { color: var(--purple); }
+}
+
+h2 {
+  margin: 0 0 8px;
+  font-size: 12px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--purple);
+}
+
+.jm-card {
+  padding: 20px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  transition: border-color var(--transition), box-shadow var(--transition);
+}
+
+.jm-card:hover {
+  border-color: var(--orange);
+  box-shadow: 0 2px 12px rgba(233, 84, 32, 0.06);
+}
+
+.jm-hint {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.jm-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 14px;
+}
+
+.jm-field input[type="password"],
+.jm-field input[type="text"],
+.jm-field select {
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--fg);
+  font: inherit;
+  transition: border-color var(--transition), box-shadow var(--transition);
+}
+
+.jm-field input:focus-visible,
+.jm-field select:focus-visible {
+  outline: none;
+  border-color: var(--orange);
+  box-shadow: 0 0 0 3px var(--orange-glow);
+}
+
+.jm-field input[type="range"] {
+  width: 100%;
+  accent-color: var(--orange);
+}
+
+.jm-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.jm-btn {
+  padding: 10px 16px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--fg);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 500;
+  transition: all var(--transition);
+  position: relative;
+}
+
+.jm-btn:hover {
+  background: var(--card);
+  border-color: var(--muted);
+}
+
+.jm-btn:active {
+  transform: scale(0.97);
+}
+
+.jm-btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--orange-glow);
+}
+
+#optionsFileInput {
+  position: fixed;
+  left: -9999px;
+  top: 0;
+  width: 0;
+  height: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+#uploadCvLabel {
+  cursor: pointer;
+}
+
+.jm-btn--primary {
+  background: linear-gradient(180deg, var(--purple), var(--purple-dark));
+  color: #ffffff;
+  border-color: transparent;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.12);
+}
+
+.jm-btn--primary:hover {
+  background: linear-gradient(180deg, var(--purple-dark), #3d142b);
+}
+
+.jm-status {
+  font-size: 13px;
+  color: var(--muted);
+  transition: color var(--transition);
+}
+
+.jm-status[data-state="ok"] { color: var(--success); }
+.jm-status[data-state="err"] { color: var(--danger); }
+
+.jm-history {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 260px;
+  overflow-y: auto;
+}
+
+.jm-history li {
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg);
+  font-size: 13px;
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  transition: border-color var(--transition);
+}
+
+.jm-history li:hover {
+  border-color: var(--orange);
+}
+
+.jm-history li strong {
+  color: var(--orange);
+  font-weight: 500;
+}
+
+.jm-history li small {
+  color: var(--muted);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .jm-card,
+  .jm-btn,
+  .jm-history li {
+    transition: none;
+  }
+}

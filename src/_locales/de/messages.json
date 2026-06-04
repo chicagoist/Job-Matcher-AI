@@ -1,0 +1,216 @@
+{
+  "appName": {
+    "message": "Job Matcher",
+    "description": "Name der Erweiterung."
+  },
+  "appDescription": {
+    "message": "Stellen analysieren und Anschreiben automatisch erstellen – mit Gemini.",
+    "description": "Beschreibung der Erweiterung."
+  },
+  "setupPrompt": {
+    "message": "Bitte hinterlege deinen Gemini-API-Schlüssel. Er wird lokal in deinem Browser gespeichert.",
+    "description": "Hinweis im Setup-Dialog."
+  },
+  "apiKeyLabel": {
+    "message": "Gemini-API-Schlüssel",
+    "description": "Label für das API-Schlüssel-Eingabefeld."
+  },
+  "apiKeyPlaceholder": {
+    "message": "AIza…",
+    "description": "Platzhalter für das API-Schlüssel-Eingabefeld."
+  },
+  "buttonSave": {
+    "message": "Schlüssel speichern",
+    "description": "Beschriftung der Speichern-Schaltfläche."
+  },
+  "buttonCancel": {
+    "message": "Abbrechen",
+    "description": "Beschriftung der Abbrechen-Schaltfläche."
+  },
+  "buttonContinue": {
+    "message": "Trotzdem laden",
+    "description": "Beschriftung der Bestätigen-Schaltfläche."
+  },
+  "buttonClose": {
+    "message": "Schließen",
+    "description": "Beschriftung der Schließen-Schaltfläche."
+  },
+  "buttonScreen": {
+    "message": "Stelle prüfen",
+    "description": "Beschriftung der Schaltfläche zum Analysieren der aktuellen Seite."
+  },
+  "buttonScreenTitle": {
+    "message": "Stellenanzeige auf dieser Seite analysieren",
+    "description": "Tooltip der Schaltfläche 'Stelle prüfen'."
+  },
+  "buttonVoice": {
+    "message": "Sprache",
+    "description": "Beschriftung der Schaltfläche für die Sprachaufnahme."
+  },
+  "buttonStop": {
+    "message": "Stopp",
+    "description": "Beschriftung der Aufnahme-Stopp-Schaltfläche."
+  },
+  "buttonVoiceTitle": {
+    "message": "Sprachfrage stellen",
+    "description": "Tooltip der Sprach-Schaltfläche."
+  },
+  "buttonCv": {
+    "message": "Lebenslauf",
+    "description": "Beschriftung der Schaltfläche zum Hochladen des Lebenslaufs."
+  },
+  "buttonCvTitle": {
+    "message": "Lebenslauf (PDF) hochladen",
+    "description": "Tooltip der Lebenslauf-Schaltfläche."
+  },
+  "buttonCopy": {
+    "message": "In Zwischenablage kopieren",
+    "description": "Beschriftung der Kopieren-Schaltfläche."
+  },
+  "buttonCopied": {
+    "message": "Kopiert!",
+    "description": "Bestätigung nach erfolgreichem Kopieren."
+  },
+  "changeKey": {
+    "message": "API-Schlüssel ändern",
+    "description": "Link zum Ändern des API-Schlüssels."
+  },
+  "ready": {
+    "message": "Bereit. Lade deinen Lebenslauf hoch oder klicke auf 'Stelle prüfen'.",
+    "description": "Hinweistext im leeren Ergebnisbereich."
+  },
+  "loadingAnalyzing": {
+    "message": "Stelle und Lebenslauf werden analysiert…",
+    "description": "Hinweistext während der Analyse."
+  },
+  "loadingListening": {
+    "message": "Ich höre zu …",
+    "description": "Hinweistext während der Sprachaufnahme."
+  },
+  "audioHeading": {
+    "message": "Antwort auf deine Sprachfrage",
+    "description": "Überschrift des Audioergebnisses."
+  },
+  "scoreLabel": {
+    "message": "Bewertung: $1/10",
+    "description": "Bewertungs-Label mit Platzhalter für die Punktzahl.",
+    "placeholders": {
+      "1": { "content": "$1", "example": "8" }
+    }
+  },
+  "analysisHeading": {
+    "message": "Analyse",
+    "description": "Überschrift des Analyse-Abschnitts."
+  },
+  "matchedSkills": {
+    "message": "Passende Fähigkeiten",
+    "description": "Überschrift der Liste passender Fähigkeiten."
+  },
+  "missingSkills": {
+    "message": "Fehlende Fähigkeiten",
+    "description": "Überschrift der Liste fehlender Fähigkeiten."
+  },
+  "coverLetterHeading": {
+    "message": "Anschreiben",
+    "description": "Überschrift des Anschreiben-Blocks."
+  },
+  "coverLetterMissing": {
+    "message": "Das Modell hat kein Anschreiben erstellt.",
+    "description": "Hinweis, wenn trotz ausreichender Bewertung kein Anschreiben vorliegt."
+  },
+  "coverLetterBelowThreshold": {
+    "message": "Die Bewertung liegt unter dem Schwellwert. Es wurde kein Anschreiben erstellt.",
+    "description": "Hinweis bei zu niedriger Bewertung."
+  },
+  "modelFooter": {
+    "message": "Verarbeitet von: $1",
+    "description": "Fußzeile mit dem Namen des Modells.",
+    "placeholders": {
+      "1": { "content": "$1", "example": "gemini-2.5-flash" }
+    }
+  },
+  "errorPrefix": {
+    "message": "Fehler: $1",
+    "description": "Fehlermeldung mit Platzhalter.",
+    "placeholders": {
+      "1": { "content": "$1", "example": "Kein API-Schlüssel hinterlegt." }
+    }
+  },
+  "errorUnknown": {
+    "message": "Unbekannter Fehler.",
+    "description": "Generische Fehlermeldung."
+  },
+  "errorNoCv": {
+    "message": "Bitte lade zuerst deinen Lebenslauf hoch (Schaltfläche 'Lebenslauf').",
+    "description": "Hinweis bei fehlendem Lebenslauf."
+  },
+  "errorMic": {
+    "message": "Mikrofon-Fehler: $1",
+    "description": "Mikrofon-Fehlermeldung mit Platzhalter.",
+    "placeholders": {
+      "1": { "content": "$1", "example": "Permission denied" }
+    }
+  },
+  "errorPdfOnly": {
+    "message": "Es werden ausschließlich PDF-Dateien unterstützt.",
+    "description": "Hinweis bei falschem Dateityp."
+  },
+  "errorClipboard": {
+    "message": "Kopieren in die Zwischenablage fehlgeschlagen.",
+    "description": "Fehlermeldung beim Kopieren."
+  },
+  "errorUnexpected": {
+    "message": "Unerwartete Antwort des Hintergrund-Skripts.",
+    "description": "Hinweis bei unerwarteter Antwort."
+  },
+  "confirmCvLargeTitle": {
+    "message": "Große Datei",
+    "description": "Titel des Bestätigungsdialogs bei großen PDFs."
+  },
+  "confirmCvLargeMessage": {
+    "message": "Die Datei '$1' ist $2 groß. Der Upload kann länger dauern und das Speicherlimit überschreiten. Trotzdem laden?",
+    "description": "Nachricht des Bestätigungsdialogs.",
+    "placeholders": {
+      "1": { "content": "$1", "example": "lebenslauf.pdf" },
+      "2": { "content": "$2", "example": "5.4 MB" }
+    }
+  },
+  "cvStatusOk": {
+    "message": "✓ $1",
+    "description": "Status-Anzeige nach erfolgreichem Upload.",
+    "placeholders": {
+      "1": { "content": "$1", "example": "lebenslauf.pdf" }
+    }
+  },
+  "cvLoadedInfo": {
+    "message": "Lebenslauf gespeichert. Du kannst jetzt eine Stelle prüfen.",
+    "description": "Bestätigung nach erfolgreichem Upload."
+  },
+  "documentGeneric": {
+    "message": "Dokument",
+    "description": "Platzhalter-Name für ein anonymes Dokument."
+  },
+  "historyTitle": {
+    "message": "Verlauf",
+    "description": "Überschrift der Verlaufssektion im Panel."
+  },
+  "historyEmpty": {
+    "message": "Noch keine Analysen durchgeführt.",
+    "description": "Hinweis bei leerem Verlauf im Panel."
+  },
+  "thresholdSliderLabel": {
+    "message": "Schwellwert: $1/10",
+    "description": "Schwellwert-Anzeige im Panel.",
+    "placeholders": {
+      "1": { "content": "$1", "example": "8" }
+    }
+  },
+  "dropZoneHint": {
+    "message": "PDF hier ablegen",
+    "description": "Hinweis in der Drag-Drop-Zone für den Lebenslauf."
+  },
+  "dropZoneActive": {
+    "message": "Loslassen zum Hochladen",
+    "description": "Hinweis wenn eine Datei über die Drop-Zone gezogen wird."
+  }
+}

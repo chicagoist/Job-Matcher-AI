@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <div id="setup">
+      <h1>Job Matcher</h1>
+      <p class="hint">Gemini-API-Schl&uuml;ssel hinterlegen:</p>
+      <input id="apiKey" type="password" placeholder="Schl&uuml;ssel eingeben&hellip;" />
+      <button id="saveKey" class="btn primary">Speichern</button>
+      <span id="keyError" class="err"></span>
+    </div>
+    <div id="main" hidden>
+      <h1>Job Matcher</h1>
+      <div class="row">
+        <button id="analyzeBtn" class="btn primary">Stelle pr&uuml;fen</button>
+        <button id="uploadBtn" class="btn">Lebenslauf</button>
+      </div>
+      <div id="cvStatus" class="status"></div>
+      <input id="fileInput" type="file" accept=".pdf" class="file-input" />
+      <div id="result" class="result"></div>
+      <div class="row">
+        <button id="openOptions" class="btn small">Einstellungen</button>
+        <button id="changeKey" class="btn small">Schl&uuml;ssel &auml;ndern</button>
+      </div>
+    </div>
+    <script src="popup.js"></script>
+  </body>
+</html>
