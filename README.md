@@ -112,23 +112,6 @@ npm test
 
 ---
 
-## Packaging and Deployment to Firefox Add-ons (AMO)
-
-To build a production package ready for submission:
-```bash
-npm run package
-```
-This builds the production assets into `dist/` and compiles them into a ZIP archive: `web-ext-artifacts/job_matcher_ai-1.0.0.zip`.
-
-### Submission steps:
-1. Log in to the [Firefox Add-ons Developer Hub](https://addons.mozilla.org/developers/).
-2. Click **Submit a New Add-on**.
-3. Choose **On your own** (for self-signing/distribution) or **On this site** (to list it on AMO).
-4. Upload `web-ext-artifacts/job_matcher_ai-1.0.0.zip`.
-5. Submit for automated verification.
-
----
-
 ## License
 
 This project is licensed under the MIT License. The Ubuntu font is licensed under the SIL Open Font License (see `src/assets/fonts/`).
