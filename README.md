@@ -1,5 +1,7 @@
 # Job Matcher AI
 
+[![Firefox Add-on](https://img.shields.io/badge/Firefox-Add--on-FF9900.svg)](https://addons.mozilla.org/ru/firefox/addon/job-matcher-ai/)
+
 A professional Firefox Extension that analyzes online job postings and compares them against your uploaded resume (PDF). If the match quality meets or exceeds your configured threshold (default 7/10), it automatically generates a customized cover letter (Anschreiben) tailored to the job requirements.
 
 Powered by the **Google Gemini API**, Job Matcher AI runs completely locally inside your browser, respects your privacy, and utilizes a secure, warning-free implementation compliant with the latest Mozilla Add-on developer standards.
