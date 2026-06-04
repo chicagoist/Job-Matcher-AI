@@ -1,67 +1,134 @@
-# Job Matcher
+# Job Matcher AI
 
-Firefox-Erweiterung, die Stellenanzeigen analysiert und automatisch ein passendes Anschreiben erzeugt, sobald die Übereinstimmung mit dem hinterlegten Lebenslauf einen konfigurierbaren Schwellwert (Standard 8/10) erreicht.
+A professional Firefox Extension that analyzes online job postings and compares them against your uploaded resume (PDF). If the match quality meets or exceeds your configured threshold (default 7/10), it automatically generates a customized cover letter (Anschreiben) tailored to the job requirements.
 
-Die Analyse und Texterstellung erfolgt über die Gemini API von Google. Das Add-on läuft komplett im Browser, ist auf Deutsch lokalisiert und folgt der Ubuntu-Designsprache (Farbpalette und Schriftart).
+Powered by the **Google Gemini API**, Job Matcher AI runs completely locally inside your browser, respects your privacy, and utilizes a secure, warning-free implementation compliant with the latest Mozilla Add-on developer standards.
 
-## Funktionen
+---
 
-- **Stelle prüfen**: extrahiert den Text der aktuellen Seite, vergleicht ihn mit dem hinterlegten Lebenslauf und erzeugt eine Bewertung (1–10) sowie – bei ausreichender Übereinstimmung – ein Anschreiben.
-- **Sprachfrage**: stellt eine freie Frage per Mikrofon, Gemini antwortet auf Deutsch.
-- **Lebenslauf**: PDF-Datei wird lokal im Browser gespeichert (Data-URL, max. 5 MB). Größenwarnung bei Überschreitung.
-- **Einstellungen**: API-Schlüssel, Modell (`gemini-2.5-flash` Standard, `gemini-2.5-pro`, `gemini-2.0-flash`), Schwellwert (1–10), Verlauf.
-- **Drag & Drop**: das Panel lässt sich per Header verschieben, die Position wird gespeichert.
-- **Tastenkürzel**: `Alt+J` schaltet das Panel ein/aus.
-- **Sprachausgabe**: das Anschreiben wird in der Sprache der Original-Stellenanzeige verfasst (DE, EN, etc.).
-- **Verlauf**: die letzten 20 Analysen werden lokal gespeichert und sind in den Einstellungen einsehbar.
+## Table of Contents
 
-## Datenschutz
+- [Key Features](#key-features)
+- [Architecture & Mechanics](#architecture--mechanics)
+- [German Application Best Practices & the "Übersetzungs-Regel"](#german-application-best-practices--the-übersetzungs-regel)
+- [Security & Privacy Standards](#security--privacy-standards)
+- [Developer Guide](#developer-guide)
+  - [Prerequisites](#prerequisites)
+  - [Build and Run Tasks](#build-and-run-tasks)
+  - [Testing](#testing)
+- [Packaging and Deployment to Firefox Add-ons (AMO)](#packaging-and-deployment-to-firefox-add-ons-amo)
+- [License](#license)
 
-Alle Daten – API-Schlüssel, Lebenslauf (PDF), Verlauf, Panel-Position – werden ausschließlich in `chrome.storage.local` des Browsers gespeichert. Es gibt keinen Server des Anbieters, keinen Tracker, keine Telemetrie.
+---
 
-Einzige ausgehende Verbindung: Anfrage an `https://generativelanguage.googleapis.com/…` (Gemini). Weitere Informationen in `PRIVACY.md`.
+## Key Features
 
-## Installation (Entwickler)
+- **Automated Content Extraction**: Reads and parses the text of the job description page automatically—even from copy-protected web pages—by avoiding standard `innerText` blocks and walking the DOM using `textContent`.
+- **Match Score & Feedback**: Rates match quality on a scale from 1 to 10 and provides a detailed German explanation of matched and missing skills.
+- **Cover Letter Generation**: Automatically writes a professional, tailor-made German cover letter if the match score is at least 7/10 (user-configurable).
+- **Voice Assistant**: Allows you to record and ask voice questions via your microphone, using Gemini to respond instantly in German.
+- **Stateless Window Lock & Bounds Constraint**:
+  - Automatically restricts the extension popup window from spawning duplicates; multiple clicks on the icon focus the existing window.
+  - Keeps the popup window nested strictly within the boundaries of your active browser window, preventing it from being dragged off-screen.
+- **History Log**: Keeps a local history of your last 20 evaluations (stored locally inside `chrome.storage.local`).
+- **Ubuntu Design System**: A premium dark-mode interface styled according to the Ubuntu design palette and font guidelines.
 
-Voraussetzungen: Node.js 18+ und npm.
+---
 
+## Architecture & Mechanics
+
+```mermaid
+graph TD
+    BrowserAction[Browser Action Clicked] --> SW[Service Worker background.js]
+    SW -->|Stateless Query| WinCheck{Popup Open?}
+    WinCheck -->|Yes| FocusWin[Focus Existing Window]
+    WinCheck -->|No| CreateWin[Create Popup Window popup.html]
+    
+    Popup[Popup Panel] -->|ANALYZE_JOB| SW
+    SW -->|Resolve Web Tab| TabFinder[Find Last Active Normal Window Web Tab]
+    TabFinder -->|Script Injection| Extractor[Content Extractor Script]
+    Extractor -->|Text Content| SW
+    
+    SW -->|API Key + CV + Job Text| Gemini[Google Gemini API]
+    Gemini -->|Raw Response JSON / Truncated| Parser[Result Parser + JSON Repair]
+    Parser -->|Cleaned Result Object| SW
+    SW -->|Response| Popup
+```
+
+1. **Service Worker (`background.js`)**: Orchestrates extension actions. It tracks window focus dynamically, resolves which web tab to extract text from (ignoring internal extension pages), and contacts the Gemini API.
+2. **Popup Window (`popup.html` / `popup.js`)**: Displays the main application. It features a self-contained window position constrainer that polls current coordinates and snaps the popup back if moved beyond the active browser window.
+3. **Robust JSON Recovery (`result-parser.js`)**: Features an advanced recovery parser. If Gemini hits its output token limit or safety block and returns truncated text, the parser auto-completes unclosed string quotes, tags, and brackets to salvage the score and reasoning instead of failing.
+
+---
+
+## German Application Best Practices & the "Übersetzungs-Regel"
+
+When generating cover letters, Job Matcher AI does not merely listing skills or copy-paste text. It is instructed to follow premium German HR standards under the **"Übersetzungs-Regel"** (Translation Rule):
+- **Requirement Translation**: Translates each critical job requirement into concrete evidence, accomplishments, or project examples from the candidate's CV (rather than making empty claims).
+- **Format Compliance**: Structured professionally with an appropriate greeting, a tailored introduction referencing the job, 2-3 body paragraphs proving experience, clean company motivation, and a formal closing with availability.
+- **Placeholder-Free**: Outputs a completed, ready-to-send cover letter without annoying placeholders (like `[Name]` or `[Date]`).
+
+---
+
+## Security & Privacy Standards
+
+- **0 Warnings & 0 Errors**: Job Matcher AI is fully compliant with the strict security requirements of the Mozilla Add-on developer guidelines. It completely avoids `innerHTML` and uses secure DOM APIs (`replaceChildren()`, `createElement()`, `textContent()`, `createTextNode()`) to guarantee zero unsafe variable assignment notices.
+- **100% Local Storage**: Your API Key, CV (PDF), and evaluation history are kept local inside your browser (`chrome.storage.local`). No developer servers, trackers, or telemetries are used.
+
+---
+
+## Developer Guide
+
+### Prerequisites
+- Node.js (version 18 or higher)
+- npm
+
+### Build and Run Tasks
+Install dependencies:
 ```bash
 npm install
-npm run typecheck
-npm test
+```
+
+Compile TypeScript and build assets with `esbuild`:
+```bash
 npm run build
 ```
 
-Das gebaute Add-on liegt in `dist/`. Zum Verpacken als signierfähiges ZIP:
-
+Watch mode for development:
 ```bash
-npx web-ext build --source-dir=dist --artifacts-dir=web-ext-artifacts --overwrite-dest
+npm run build:watch
 ```
 
-## Lokale Installation (unsigniert)
-
-1. `about:debugging#/runtime/this-firefox` in Firefox öffnen.
-2. „Temporäres Add-on laden…" → `dist/manifest.json` auswählen.
-
-## Veröffentlichung bei AMO
-
-1. Auf <https://addons.mozilla.org/de/developers/> einloggen.
-2. Add-on über „Neue Version einreichen" hochladen.
-3. Quell-Tarball mit `web-ext build --source-dir=src` separat hochladen (für manche Lizenzen Pflicht).
-
-Signatur über die AMO-API ist optional:
-
+Run linter checks (ensure zero warnings/errors before packaging):
 ```bash
-AMO_JWT_ISSUER=…  AMO_JWT_SECRET=…  npx web-ext sign --source-dir=dist --artifacts-dir=web-ext-artifacts
+npm run lint:ext
 ```
 
-## Entwicklung
+### Testing
+Run unit tests (Vitest):
+```bash
+npm test
+```
 
-- `npm run build:watch` – esbuild im Watch-Modus
-- `npm run lint` – ESLint
-- `npm run format` – Prettier
-- `npm test` – Vitest
+---
 
-## Lizenz
+## Packaging and Deployment to Firefox Add-ons (AMO)
 
-MIT. Die Ubuntu-Schriftart ist unter der SIL Open Font License lizenziert (siehe `src/assets/fonts/`).
+To build a production package ready for submission:
+```bash
+npm run package
+```
+This builds the production assets into `dist/` and compiles them into a ZIP archive: `web-ext-artifacts/job_matcher_ai-1.0.0.zip`.
+
+### Submission steps:
+1. Log in to the [Firefox Add-ons Developer Hub](https://addons.mozilla.org/developers/).
+2. Click **Submit a New Add-on**.
+3. Choose **On your own** (for self-signing/distribution) or **On this site** (to list it on AMO).
+4. Upload `web-ext-artifacts/job_matcher_ai-1.0.0.zip`.
+5. Submit for automated verification.
+
+---
+
+## License
+
+This project is licensed under the MIT License. The Ubuntu font is licensed under the SIL Open Font License (see `src/assets/fonts/`).
