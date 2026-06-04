@@ -16,7 +16,6 @@ Powered by the **Google Gemini API**, Job Matcher AI runs completely locally ins
   - [Prerequisites](#prerequisites)
   - [Build and Run Tasks](#build-and-run-tasks)
   - [Testing](#testing)
-- [Packaging and Deployment to Firefox Add-ons (AMO)](#packaging-and-deployment-to-firefox-add-ons-amo)
 - [License](#license)
 
 ---
