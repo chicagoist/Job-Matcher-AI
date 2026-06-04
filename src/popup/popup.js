@@ -54,8 +54,12 @@ document.getElementById("fileInput").addEventListener("change", async (e) => {
   const file = e.target.files?.[0];
   if (!file) return;
   if (!file.name.toLowerCase().endsWith(".pdf")) {
-    document.getElementById("result").innerHTML =
-      '<span class="err">Nur PDF-Dateien werden unterst\u00fctzt.</span>';
+    const resEl = document.getElementById("result");
+    resEl.replaceChildren();
+    const span = document.createElement("span");
+    span.className = "err";
+    span.textContent = "Nur PDF-Dateien werden unterst\u00fctzt.";
+    resEl.appendChild(span);
     return;
   }
   const reader = new FileReader();
@@ -68,59 +72,92 @@ document.getElementById("fileInput").addEventListener("change", async (e) => {
     updateCvStatus();
   };
   reader.onerror = () => {
-    document.getElementById("result").innerHTML =
-      '<span class="err">Fehler beim Lesen der Datei.</span>';
+    const resEl = document.getElementById("result");
+    resEl.replaceChildren();
+    const span = document.createElement("span");
+    span.className = "err";
+    span.textContent = "Fehler beim Lesen der Datei.";
+    resEl.appendChild(span);
   };
   reader.readAsDataURL(file);
 });
 
 document.getElementById("analyzeBtn").addEventListener("click", async () => {
   const resultEl = document.getElementById("result");
-  resultEl.innerHTML = "Analysiere\u2026";
+  resultEl.textContent = "Analysiere\u2026";
 
   try {
-    // Background script finds the active web tab itself.
     const response = await chrome.runtime.sendMessage({
       action: "ANALYZE_JOB",
     });
+    resultEl.replaceChildren();
+
     if (!response || response.error) {
-      resultEl.innerHTML = '<span style="color:#c62828">' + esc(response?.error ?? "Fehler") + "</span>";
+      const span = document.createElement("span");
+      span.style.color = "#c62828";
+      span.textContent = response?.error ?? "Fehler";
+      resultEl.appendChild(span);
       return;
     }
+
     const r = response.result;
     const scoreColor = r.score >= 7 ? "#2e7d32" : r.score >= 4 ? "#c66900" : "#c62828";
-    let html = '<div class="score" style="color:' + scoreColor + '">' + r.score + "/10</div>";
-    html += '<div class="reasoning">' + esc(r.reasoning) + "</div>";
+
+    const scoreDiv = document.createElement("div");
+    scoreDiv.className = "score";
+    scoreDiv.style.color = scoreColor;
+    scoreDiv.textContent = r.score + "/10";
+    resultEl.appendChild(scoreDiv);
+
+    const reasoningDiv = document.createElement("div");
+    reasoningDiv.className = "reasoning";
+    reasoningDiv.textContent = r.reasoning;
+    resultEl.appendChild(reasoningDiv);
+
     if (r.matchedSkills?.length) {
-      html +=
-        '<div class="list"><strong>Passend:</strong> ' +
-        r.matchedSkills.map(esc).join(", ") +
-        "</div>";
+      const listDiv = document.createElement("div");
+      listDiv.className = "list";
+      const strong = document.createElement("strong");
+      strong.textContent = "Passend: ";
+      listDiv.appendChild(strong);
+      listDiv.appendChild(document.createTextNode(r.matchedSkills.join(", ")));
+      resultEl.appendChild(listDiv);
     }
+
     if (r.missingSkills?.length) {
-      html +=
-        '<div class="list"><strong>Fehlend:</strong> ' +
-        r.missingSkills.map(esc).join(", ") +
-        "</div>";
+      const listDiv = document.createElement("div");
+      listDiv.className = "list";
+      const strong = document.createElement("strong");
+      strong.textContent = "Fehlend: ";
+      listDiv.appendChild(strong);
+      listDiv.appendChild(document.createTextNode(r.missingSkills.join(", ")));
+      resultEl.appendChild(listDiv);
     }
+
     if (r.coverLetter) {
-      html +=
-        '<hr><textarea readonly style="width:100%;border:1px solid #d8d4d0;border-radius:4px;padding:8px;font:inherit;font-size:12px;resize:vertical;min-height:120px;box-sizing:border-box">' +
-        esc(r.coverLetter) +
-        "</textarea>";
+      resultEl.appendChild(document.createElement("hr"));
+      const textarea = document.createElement("textarea");
+      textarea.readOnly = true;
+      textarea.style.width = "100%";
+      textarea.style.border = "1px solid #d8d4d0";
+      textarea.style.borderRadius = "4px";
+      textarea.style.padding = "8px";
+      textarea.style.font = "inherit";
+      textarea.style.fontSize = "12px";
+      textarea.style.resize = "vertical";
+      textarea.style.minHeight = "120px";
+      textarea.style.boxSizing = "border-box";
+      textarea.value = r.coverLetter;
+      resultEl.appendChild(textarea);
     }
-    resultEl.innerHTML = html;
   } catch (e) {
-    resultEl.innerHTML =
-      '<span style="color:#c62828">' + esc(e instanceof Error ? e.message : "Unbekannter Fehler") + "</span>";
+    resultEl.replaceChildren();
+    const span = document.createElement("span");
+    span.style.color = "#c62828";
+    span.textContent = e instanceof Error ? e.message : "Unbekannter Fehler";
+    resultEl.appendChild(span);
   }
 });
-
-function esc(s) {
-  const d = document.createElement("div");
-  d.textContent = s;
-  return d.innerHTML;
-}
 
 async function startWindowConstrainer() {
   setInterval(async () => {
