@@ -1,10 +1,42 @@
 # Job Matcher AI
 
 [![Firefox Add-on](https://img.shields.io/badge/Firefox-Add--on-FF9900.svg)](https://addons.mozilla.org/ru/firefox/addon/job-matcher-ai/)
+[![Beta](https://img.shields.io/badge/Status-Beta-orange)]()
+
+> ⚠️ **Beta-Phase** – Dieses Projekt ist aktiv in Entwicklung. Kernfunktionen laufen stabil,
+> aber es kann zu Fehlern kommen. Ich lade **Entwickler:innen und Jobsuchende ein**,
+> mitzuhelfen, das Add-on zur Release-Qualität zu bringen!
 
 A professional Firefox Extension that analyzes online job postings and compares them against your uploaded resume (PDF). If the match quality meets or exceeds your configured threshold (default 7/10), it automatically generates a customized cover letter (Anschreiben) tailored to the job requirements.
 
 Powered by the **Google Gemini API**, Job Matcher AI runs completely locally inside your browser, respects your privacy, and utilizes a secure, warning-free implementation compliant with the latest Mozilla Add-on developer standards.
+
+---
+
+## 🚧 Beta & Mitmachen
+
+**Job Matcher AI ist in der Beta-Phase.** Das bedeutet:
+
+### ✅ Was bereits funktioniert
+- Job-Analyse auf StepStone, Indeed, LinkedIn, XING, Arbeitsagentur, HeyJobs u. a.
+- Anschreiben-Generierung (Deutsch) ab konfigurierbarem Score
+- Sprach-Assistent (Fragen per Mikrofon)
+- Lokale History (letzte 20 Auswertungen)
+- 0 Lint-Fehler/Warnungen (AMO-konform)
+
+### 🔧 Woran noch gearbeitet wird
+- Weitere Unit-Tests für Edge-Cases
+- Content Script (statt executeScript) für stabilere Extraktion
+- Option für lokale/offene Modelle (kein API-Versand)
+- Integration weiterer Job-Plattformen
+
+### 🤝 Wie du helfen kannst
+- **Issues melden** – Fehler oder Verbesserungsvorschläge
+- **Pull Requests** – Code, Tests, Docs, Übersetzungen
+- **Feedback geben** – Funktioniert es auf deiner Lieblings-Jobseite?
+- **Ideen teilen** – Welche Funktion fehlt dir?
+
+Du brauchst kein Frontend-Profi zu sein. Das Projekt wurde selbst mit LLM-Unterstützung entwickelt – jede Hilfe ist willkommen!
 
 ---
 
@@ -14,6 +46,7 @@ Powered by the **Google Gemini API**, Job Matcher AI runs completely locally ins
 - [Architecture & Mechanics](#architecture--mechanics)
 - [German Application Best Practices & the "Übersetzungs-Regel"](#german-application-best-practices--the-übersetzungs-regel)
 - [Security & Privacy Standards](#security--privacy-standards)
+- [Installation & Test in Firefox for Developer](#-installation--test-in-firefox-for-developer)
 - [Developer Guide](#developer-guide)
   - [Prerequisites](#prerequisites)
   - [Build and Run Tasks](#build-and-run-tasks)
@@ -75,6 +108,66 @@ When generating cover letters, Job Matcher AI does not merely listing skills or 
 
 - **0 Warnings & 0 Errors**: Job Matcher AI is fully compliant with the strict security requirements of the Mozilla Add-on developer guidelines. It completely avoids `innerHTML` and uses secure DOM APIs (`replaceChildren()`, `createElement()`, `textContent()`, `createTextNode()`) to guarantee zero unsafe variable assignment notices.
 - **100% Local Storage**: Your API Key, CV (PDF), and evaluation history are kept local inside your browser (`chrome.storage.local`). No developer servers, trackers, or telemetries are used.
+
+---
+
+## 🔧 Installation & Test in Firefox for Developer
+
+### 1. Firefox for Developer Edition herunterladen
+→ [https://www.mozilla.org/de/firefox/developer/](https://www.mozilla.org/de/firefox/developer/)
+
+Diese Version hat separate Profile und `about:debugging` für unzignierte Add-ons.
+
+### 2. Add-on bauen
+```bash
+git clone <repo-url>
+cd Job-Matcher-AI
+npm install
+npm run build
+```
+
+Das erstellt ein `dist/`-Verzeichnis mit allen benötigten Dateien.
+
+### 3. Temporäres Add-on laden (about:debugging)
+
+1. Öffne Firefox for Developer
+2. Gehe zu `about:debugging#/runtime/this-firefox`
+3. Klicke auf **„Dieses Firefox“** (im linken Menü)
+4. Klicke auf **„Temporäres Add-on laden…“**
+5. Wähle die Datei `dist/manifest.json` aus
+
+Das Add-on ist jetzt aktiv, solange Firefox läuft.
+
+> 💡 **Tipp:** Bei Code-Änderungen einfach erneut `npm run build` ausführen
+> und in `about:debugging` auf den „Neu laden“-Button des Add-ons klicken.
+
+### 4. Alternative: web-ext (automatisches Neuladen)
+
+```bash
+npx web-ext run --source-dir=dist
+```
+
+Startet Firefox for Developer automatisch mit geladenem Add-on
+und überwacht Änderungen im Quellcode.
+
+### 5. Testen
+
+1. Gehe zu einer beliebigen Stellenanzeige (z. B. StepStone, Indeed)
+2. Klicke auf das Job Matcher AI-Icon in der Toolbar
+3. Gib deinen Gemini-API-Key und Lebenslauf (PDF) in den Einstellungen ein
+4. Klicke auf „Stelle prüfen“
+5. Sieh dir Score, Begründung und (optional) Anschreiben an
+
+### 🔗 Nützliche Links
+
+| Link | Beschreibung |
+|------|-------------|
+| [Firefox for Developer](https://www.mozilla.org/de/firefox/developer/) | Browser zum Testen unsigned Add-ons |
+| [about:debugging](about:debugging#/runtime/this-firefox) | Temporäre Add-ons laden |
+| [Gemini API Key](https://aistudio.google.com/apikey) | Kostenloser API-Key von Google |
+| [web-ext Dokumentation](https://extensionworkshop.com/documentation/develop/web-ext-command-reference/) | CLI-Tool für Extension-Entwicklung |
+| [Mozilla Extension Workshop](https://extensionworkshop.com/) | Offizielle Dokumentation |
+| [AMO – Job Matcher AI](https://addons.mozilla.org/de/firefox/addon/job-matcher-ai/) | Veröffentlichte Version |
 
 ---
 
