@@ -5,6 +5,33 @@ Alle wesentlichen Änderungen an diesem Projekt werden in dieser Datei festgehal
 Das Format orientiert sich an [Keep a Changelog](https://keepachangelog.com/de/1.1.0/),
 dieses Projekt folgt der [Semantic Versioning](https://semver.org/lang/de/)-Spezifikation.
 
+## [2.0.0] – 2026-06-19
+
+### Hinzugefügt
+- **Python CLI** (`job_matcher_ai/`) als zweite Anwendung im Repository
+- Hexagonale Architektur: Domain, Providers, AI, Output, Service, Storage
+- DSGVO-konformes Consent-Management (`grant`/`revoke`/`check`) + Audit-Log
+- Draft-Only-Modus: `requires_manual_review = True` ist auf Modellebene erzwungen
+- Lokales LLM via Ollama (`llama3.2:3b`) – keine Cloud-AI-Datenübertragung
+- Offizielle Job-APIs: Adzuna (primär) + Indeed Partner API (sekundär)
+- SQLite-Speicher mit 6 Tabellen (WAL-Mode, Foreign Keys)
+- Typer CLI mit 6 Befehlen: `search`, `match`, `draft`, `consent`, `audit`, `drafts`
+- Markdown-Draft-Generator mit deutscher Vorlage und `⚠️ ENTWURF`-Disclaimer
+- Umfassende Testabdeckung: 59 Tests (~78% Coverage)
+- `pyproject.toml` mit Projekt-Metadaten und `job-matcher`-CLI-Entry-Point
+- `requirements.txt` und `.env.example` für das Python CLI
+
+### Geändert
+- **README.md** – Vollständig überarbeitet als Dual-App-Dokumentation (Firefox Extension + Python CLI)
+- **PRIVACY.md** – Um DSGVO-Compliance der Python CLI ergänzt
+- **.gitignore** – Um Python-spezifische Einträge erweitert (`__pycache__`, `.coverage`, etc.)
+
+### Sicherheit
+- Python CLI: Kein automatischer Versand von Bewerbungen
+- Python CLI: Kein Web Scraping – nur offizielle Job-APIs
+- Python CLI: Vollständiges Audit-Log für DSGVO-Compliance
+- Python CLI: Consent muss explizit erteilt werden (Opt-In)
+
 ## [1.0.0] – 2026-06-03
 
 ### Hinzugefügt
