@@ -55,3 +55,20 @@ export class GeminiNetworkError extends JobMatcherError {
     this.name = "GeminiNetworkError";
   }
 }
+
+export class PlatformNotSupportedError extends JobMatcherError {
+  constructor(url: string) {
+    super(
+      "PLATFORM_NOT_SUPPORTED",
+      `Diese Job-Plattform wird nicht unterstützt: ${url}. Bitte fügen Sie die Stellenanzeige manuell ein.`,
+    );
+    this.name = "PlatformNotSupportedError";
+  }
+}
+
+export class JobFetchError extends JobMatcherError {
+  constructor(platform: string, reason: string) {
+    super("JOB_FETCH_ERROR", `Fehler beim Abruf von ${platform}: ${reason}`);
+    this.name = "JobFetchError";
+  }
+}

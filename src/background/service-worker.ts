@@ -1,5 +1,5 @@
 import { isAppMessage } from "../shared/message-contracts.js";
-import type { AppMessage } from "../shared/types.js";
+import type { AppMessage, AnalyzeJobRequest } from "../shared/types.js";
 import { analyzeJob, solveAudio } from "./lib/cover-letter.js";
 import { JobMatcherError, MissingApiKeyError, MissingCvError } from "./lib/errors.js";
 
@@ -9,9 +9,7 @@ chrome.action.onClicked.addListener((tab) => {
   if (tab.id === undefined) return;
   chrome.tabs
     .sendMessage(tab.id, { action: "TOGGLE_PANEL" } satisfies AppMessage)
-    .catch(() => {
-      // Content script not injected; ignore silently.
-    });
+    .catch(() => {});
 });
 
 chrome.runtime.onMessage.addListener((raw, sender, sendResponse) => {
@@ -31,12 +29,13 @@ async function handleMessage(message: AppMessage, tabId: number | undefined) {
       if (tabId === undefined) {
         return { error: "Kein aktiver Tab verfügbar." };
       }
-      const payload = (message.payload ?? {}) as { jobText?: string; jobSource?: string };
+      const payload = (message.payload ?? {}) as AnalyzeJobRequest;
       try {
         const { result, model, threshold } = await analyzeJob({
           tabId,
           jobText: payload.jobText,
           jobSource: payload.jobSource,
+          jobUrl: payload.jobUrl,
         });
         return { ok: true, result, model, threshold };
       } catch (e) {
@@ -66,5 +65,3 @@ function toErrorMessage(e: unknown): string {
   if (e instanceof Error) return e.message;
   return "Unbekannter Fehler.";
 }
-
-

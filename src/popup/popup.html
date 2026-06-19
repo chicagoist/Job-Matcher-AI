@@ -20,6 +20,11 @@
       </div>
       <div id="cvStatus" class="status"></div>
       <input id="fileInput" type="file" accept=".pdf" class="file-input" />
+      <details>
+        <summary>Manuelle Eingabe</summary>
+        <textarea id="manualJobInput" rows="6" placeholder="Stellenanzeige hier einf&uuml;gen oder URL eingeben..." style="width:100%;border:1px solid var(--border);border-radius:4px;padding:6px;font:inherit;font-size:12px;resize:vertical;box-sizing:border-box;margin-top:6px"></textarea>
+        <button id="manualAnalyzeBtn" class="btn small" style="margin-top:4px">Mit Text analysieren</button>
+      </details>
       <div id="result" class="result"></div>
       <div class="row">
         <button id="openOptions" class="btn small">Einstellungen</button>

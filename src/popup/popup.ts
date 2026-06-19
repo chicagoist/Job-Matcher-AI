@@ -71,11 +71,14 @@ document.getElementById("fileInput")!.addEventListener("change", async (e) => {
   reader.readAsDataURL(file);
 });
 
-document.getElementById("analyzeBtn")!.addEventListener("click", async () => {
+async function sendAnalysisRequest(jobText?: string, jobSource?: string): Promise<void> {
   const resultEl = document.getElementById("result")!;
   resultEl.innerHTML = "Analysiere…";
   try {
-    const response = await chrome.runtime.sendMessage({ action: "ANALYZE_JOB" });
+    const response = await chrome.runtime.sendMessage({
+      action: "ANALYZE_JOB",
+      payload: { jobText: jobText ?? "", jobSource: jobSource ?? "" },
+    });
     if (!response || response.error) {
       resultEl.innerHTML = `<span style="color:#c62828">${response?.error ?? "Fehler"}</span>`;
       return;
@@ -98,6 +101,17 @@ document.getElementById("analyzeBtn")!.addEventListener("click", async () => {
   } catch (e) {
     resultEl.innerHTML = `<span style="color:#c62828">${e instanceof Error ? e.message : "Unbekannter Fehler"}</span>`;
   }
+}
+
+document.getElementById("analyzeBtn")!.addEventListener("click", () => {
+  void sendAnalysisRequest();
+});
+
+document.getElementById("manualAnalyzeBtn")!.addEventListener("click", () => {
+  const input = document.getElementById("manualJobInput") as HTMLTextAreaElement;
+  const text = input.value.trim();
+  if (!text) return;
+  void sendAnalysisRequest(text, "Manuelle Eingabe");
 });
 
 function esc(s: string): string {

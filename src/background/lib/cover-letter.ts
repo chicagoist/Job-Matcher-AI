@@ -4,18 +4,16 @@ import { dataUrlToBase64, detectMime, cryptoRandomId } from "../../shared/utils.
 import { callGemini, type GeminiPart } from "./gemini-client.js";
 import { SYSTEM_PROMPT, buildJobAnalysisPrompt } from "./prompts.js";
 import { parseAnalysis } from "./result-parser.js";
-import {
-  MissingApiKeyError,
-  MissingCvError,
-  GeminiBadRequestError,
-} from "./errors.js";
+import { MissingApiKeyError, MissingCvError, GeminiBadRequestError } from "./errors.js";
 import { getApiKey, getCv, getModel, getThreshold, appendHistory } from "../../shared/storage.js";
-import { extractFromDocument } from "./job-extractor.js";
+import { fetchJobData } from "./job-fetcher.js";
+import { detectPlatform, getDisplayName } from "./platform-detector.js";
 
 export interface AnalyzeArgs {
   tabId: number;
   jobText?: string;
   jobSource?: string;
+  jobUrl?: string;
 }
 
 export async function analyzeJob(args: AnalyzeArgs): Promise<{
@@ -110,48 +108,35 @@ async function resolveJobText(args: AnalyzeArgs): Promise<{
   if (args.jobText && args.jobText.trim().length > 0) {
     return { text: args.jobText.slice(0, DEFAULTS.maxJobTextChars), source: args.jobSource ?? "" };
   }
-  const results = await chrome.scripting.executeScript({
-    target: { tabId: args.tabId },
-    func: (maxChars: number) => {
-      const w = window;
-      const d = document;
-      const source = w.location.hostname.toLowerCase();
-      const title =
-        (d.querySelector("h1")?.textContent ?? d.title ?? "").trim() || undefined;
-      const company = extractCompany();
-      const text = (() => {
-        for (const sel of [
-          "main",
-          "article",
-          "[role='main']",
-          "[itemprop='description']",
-          ".job-description",
-          "#job-description",
-        ]) {
-          const el = d.querySelector(sel) as HTMLElement | null;
-          if (el) {
-            const t = (el.innerText ?? "").trim();
-            if (t.length >= 200) return t.slice(0, maxChars);
-          }
-        }
-        return ((d.body as HTMLElement | null)?.innerText ?? "").slice(0, maxChars);
-      })();
-      function extractCompany(): string | undefined {
-        const og = d.querySelector('meta[property="og:site_name"]');
-        const v = og?.getAttribute("content");
-        return v && v.trim().length > 0 ? v.trim() : undefined;
-      }
-      return { text, source, title, company };
-    },
-    args: [DEFAULTS.maxJobTextChars],
-  });
-  const r = results[0]?.result as
-    | { text: string; source: string; title?: string; company?: string }
-    | undefined;
-  if (!r) {
-    throw new GeminiBadRequestError("Konnte den Text der Seite nicht lesen.");
-  }
-  return r;
-}
 
-export { extractFromDocument };
+  if (args.jobUrl) {
+    const data = await fetchJobData(args.jobUrl);
+    return {
+      text: data.description,
+      source: `${getDisplayName(data.platform)} (JSON-LD)`,
+      title: data.title,
+      company: data.company,
+    };
+  }
+
+  const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+  const tab = tabs[0];
+  if (!tab?.url || !tab.id) {
+    throw new GeminiBadRequestError("Keine aktive Job-Seite gefunden.");
+  }
+
+  const platform = detectPlatform(tab.url);
+  if (!platform) {
+    throw new GeminiBadRequestError(
+      "Diese Seite wird nicht als Job-Plattform erkannt. Bitte fügen Sie die Stellenanzeige manuell ein.",
+    );
+  }
+
+  const data = await fetchJobData(tab.url);
+  return {
+    text: data.description,
+    source: `${getDisplayName(data.platform)} (JSON-LD)`,
+    title: data.title,
+    company: data.company,
+  };
+}

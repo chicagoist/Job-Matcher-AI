@@ -15,6 +15,7 @@ export const DEFAULTS = {
   maxJobTextChars: 10_000,
   maxCvBytes: 5 * 1024 * 1024,
   maxHistoryEntries: 20,
+  fetchTimeoutMs: 15_000,
 } as const;
 
 export const GEMINI_ENDPOINT = "https://generativelanguage.googleapis.com/v1beta/models";

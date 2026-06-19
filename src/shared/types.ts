@@ -12,6 +12,27 @@ export interface JobPosting {
   url?: string;
 }
 
+export interface StructuredJobData {
+  platform: string;
+  jobId?: string;
+  title: string;
+  company: string;
+  location?: string;
+  description: string;
+  salary?: string;
+  employmentType?: string;
+  datePosted?: string;
+  url: string;
+}
+
+export type JobFetchStrategy = "json-ld" | "guest-api" | "manual";
+
+export interface PlatformInfo {
+  platform: string;
+  jobId?: string;
+  strategy: JobFetchStrategy;
+}
+
 export interface AnalysisResult {
   score: number;
   reasoning: string;
@@ -55,6 +76,7 @@ export type OpenOptionsMessage = BaseMessage<"OPEN_OPTIONS">;
 export interface AnalyzeJobRequest {
   jobText: string;
   jobSource: string;
+  jobUrl?: string;
 }
 export type AnalyzeJobMessage = BaseMessage<"ANALYZE_JOB", AnalyzeJobRequest>;
 
