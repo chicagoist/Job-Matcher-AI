@@ -1,3 +1,10 @@
+> **⚠️ WARNUNG / WARNING**  
+> Diese Anwendung verstößt gegen Datenschutzgesetze, da sie Inhalte von Webseiten ohne Zustimmung der Betreiber extrahiert und an eine externe KI (Google Gemini) übermittelt.  
+> **Nur für Testzwecke verwenden.**  
+> In Zukunft ist geplant, die Analyse entweder über offizielle API-Schnittstellen der Jobportale oder komplett lokal über eine lokale LLM (z. B. Ollama) durchzuführen.
+
+---
+
 # Job Matcher AI
 
 [![Firefox Add-on](https://img.shields.io/badge/Firefox-Add--on-FF9900.svg)](https://addons.mozilla.org/ru/firefox/addon/job-matcher-ai/)
