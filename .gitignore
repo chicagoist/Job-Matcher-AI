@@ -57,3 +57,10 @@ Desktop.ini
 # Local/Agent configurations
 .opencode/
 opencode.json
+__pycache__/
+*.pyc
+.coverage
+.pytest_cache/
+*.egg-info/
+dist/
+build/

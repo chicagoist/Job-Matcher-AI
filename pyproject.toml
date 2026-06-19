@@ -1,0 +1,27 @@
+[project]
+name = "job-matcher-ai"
+version = "0.1.0"
+description = "Legal-compliant AI job matching assistant — draft-only, local LLM, official job APIs."
+requires-python = ">=3.12"
+dependencies = [
+    "pydantic>=2.0",
+    "httpx>=0.27",
+    "aiosqlite>=0.20",
+    "typer>=0.9",
+    "rich>=13.0",
+]
+
+[project.scripts]
+job-matcher = "job_matcher_ai.cli.app:app"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+asyncio_default_fixture_loop_scope = "function"
+
+[tool.coverage.run]
+source = ["job_matcher_ai"]
+branch = true
+
+[tool.coverage.report]
+show_missing = true
