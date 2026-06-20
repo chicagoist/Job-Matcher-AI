@@ -2,6 +2,10 @@ import {
   getApiKey,
   setApiKey,
   clearApiKey,
+  getOllamaHost,
+  setOllamaHost,
+  getProvider,
+  setProvider,
   setModel,
   getModel,
   setThreshold,
@@ -20,7 +24,14 @@ async function init(): Promise<void> {
   const saveKey = document.getElementById("saveKey") as HTMLButtonElement;
   const clearKeyBtn = document.getElementById("clearKey") as HTMLButtonElement;
   const keyStatus = document.getElementById("keyStatus") as HTMLElement;
-  const model = document.getElementById("model") as HTMLSelectElement;
+  const providerSelect = document.getElementById("provider") as HTMLSelectElement;
+  const ollamaSection = document.getElementById("ollamaSection") as HTMLElement;
+  const geminiSection = document.getElementById("geminiSection") as HTMLElement;
+  const ollamaHostInput = document.getElementById("ollamaHost") as HTMLInputElement;
+  const saveOllamaHostBtn = document.getElementById("saveOllamaHost") as HTMLButtonElement;
+  const ollamaHostStatus = document.getElementById("ollamaHostStatus") as HTMLElement;
+  const ollamaModelSelect = document.getElementById("ollamaModel") as HTMLSelectElement;
+  const refreshModelsBtn = document.getElementById("refreshModels") as HTMLButtonElement;
   const threshold = document.getElementById("threshold") as HTMLInputElement;
   const thresholdLabel = document.getElementById("thresholdLabel") as HTMLElement;
   const cvInfo = document.getElementById("cvInfo") as HTMLElement;
@@ -28,15 +39,20 @@ async function init(): Promise<void> {
   const historyList = document.getElementById("history") as HTMLElement;
   const clearHistoryBtn = document.getElementById("clearHistory") as HTMLButtonElement;
 
+  const provider = await getProvider();
+  providerSelect.value = provider;
+  toggleProviderSections(provider, ollamaSection, geminiSection);
+
   const currentKey = await getApiKey();
   apiKeyInput.value = currentKey ?? "";
   keyStatus.textContent = currentKey ? "Schlüssel hinterlegt." : "Kein Schlüssel hinterlegt.";
   keyStatus.dataset.state = currentKey ? "ok" : "";
 
+  const host = await getOllamaHost();
+  ollamaHostInput.value = host;
+
   const currentModel = await getModel();
-  model.value = [DEFAULTS.model, "gemini-2.5-pro", "gemini-2.0-flash"].includes(currentModel)
-    ? currentModel
-    : DEFAULTS.model;
+  await populateOllamaModels(ollamaModelSelect, host, currentModel);
 
   const currentThreshold = await getThreshold();
   threshold.value = String(currentThreshold);
@@ -49,6 +65,11 @@ async function init(): Promise<void> {
 
   const entries = await getHistory();
   renderHistory(historyList, entries);
+
+  providerSelect.addEventListener("change", async () => {
+    await setProvider(providerSelect.value);
+    toggleProviderSections(providerSelect.value, ollamaSection, geminiSection);
+  });
 
   saveKey.addEventListener("click", async () => {
     const v = apiKeyInput.value.trim();
@@ -69,8 +90,26 @@ async function init(): Promise<void> {
     keyStatus.dataset.state = "";
   });
 
-  model.addEventListener("change", async () => {
-    await setModel(model.value);
+  saveOllamaHostBtn.addEventListener("click", async () => {
+    const v = ollamaHostInput.value.trim();
+    if (!v) {
+      ollamaHostStatus.textContent = "Bitte eine gültige Adresse eingeben.";
+      ollamaHostStatus.dataset.state = "err";
+      return;
+    }
+    await setOllamaHost(v);
+    ollamaHostStatus.textContent = "Gespeichert.";
+    ollamaHostStatus.dataset.state = "ok";
+    await populateOllamaModels(ollamaModelSelect, v, ollamaModelSelect.value);
+  });
+
+  ollamaModelSelect.addEventListener("change", async () => {
+    await setModel(ollamaModelSelect.value);
+  });
+
+  refreshModelsBtn.addEventListener("click", async () => {
+    const host = await getOllamaHost();
+    await populateOllamaModels(ollamaModelSelect, host, ollamaModelSelect.value);
   });
 
   threshold.addEventListener("input", () => {
@@ -91,6 +130,50 @@ async function init(): Promise<void> {
   });
 }
 
+function toggleProviderSections(
+  provider: string,
+  ollamaSection: HTMLElement,
+  geminiSection: HTMLElement,
+): void {
+  ollamaSection.style.display = provider === "ollama" ? "" : "none";
+  geminiSection.style.display = provider === "gemini" ? "" : "none";
+}
+
+async function populateOllamaModels(
+  select: HTMLSelectElement,
+  host: string,
+  currentModel: string,
+): Promise<void> {
+  select.innerHTML = '<option value="">Lade Modelle…</option>';
+  select.disabled = true;
+  try {
+    const res = await fetch(`${host.replace(/\/+$/, "")}/api/tags`, { signal: AbortSignal.timeout(5000) });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const json = (await res.json()) as { models?: { name: string }[] };
+    const models = json.models ?? [];
+    select.innerHTML = "";
+    if (models.length === 0) {
+      select.innerHTML = '<option value="">Keine Modelle gefunden</option>';
+    } else {
+      for (const m of models) {
+        const opt = document.createElement("option");
+        opt.value = m.name;
+        opt.textContent = m.name;
+        if (m.name === currentModel) opt.selected = true;
+        select.append(opt);
+      }
+      if (!select.value && models.length > 0) {
+        select.options[0].selected = true;
+        await setModel(select.value);
+      }
+    }
+  } catch {
+    select.innerHTML = '<option value="">Ollama nicht erreichbar</option>';
+  } finally {
+    select.disabled = false;
+  }
+}
+
 function renderHistory(target: HTMLElement, entries: HistoryEntry[]): void {
   target.replaceChildren();
   if (entries.length === 0) {
@@ -103,7 +186,7 @@ function renderHistory(target: HTMLElement, entries: HistoryEntry[]): void {
     const li = document.createElement("li");
     const left = document.createElement("div");
     const title = document.createElement("strong");
-    title.textContent = `${e.score}/10 – ${e.jobTitle ?? "Stelle"}`;
+    title.textContent = `${e.score}/10 \u2013 ${e.jobTitle ?? "Stelle"}`;
     left.append(title);
     if (e.company) {
       const c = document.createElement("div");

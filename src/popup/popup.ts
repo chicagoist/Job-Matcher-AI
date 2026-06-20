@@ -13,14 +13,54 @@ async function set(key: string, value: unknown): Promise<void> {
   await chrome.storage.local.set({ [key]: value });
 }
 
+async function getProvider(): Promise<string> {
+  const r = await chrome.storage.local.get("provider");
+  return (r.provider as string) || "ollama";
+}
+
 async function showSetup(): Promise<void> {
+  const provider = await getProvider();
   const key = await get<string>(STORAGE_KEYS.apiKey);
-  document.getElementById("setup")!.hidden = !!key;
-  document.getElementById("main")!.hidden = !key;
+
+  const setupEl = document.getElementById("setup")!;
+  const mainEl = document.getElementById("main")!;
+  const hintEl = document.getElementById("setupHint")!;
+  const apiKeyInput = document.getElementById("apiKey") as HTMLInputElement;
+  const saveKeyBtn = document.getElementById("saveKey") as HTMLButtonElement;
+
+  if (provider === "ollama") {
+    setupEl.hidden = true;
+    mainEl.hidden = false;
+    return;
+  }
+
+  if (key) {
+    setupEl.hidden = true;
+    mainEl.hidden = false;
+  } else {
+    setupEl.hidden = false;
+    mainEl.hidden = true;
+    hintEl.textContent = "Gemini-API-Schl\u00fcssel hinterlegen:";
+    apiKeyInput.style.display = "";
+    saveKeyBtn.style.display = "";
+  }
+}
+
+async function updateProviderBadge(): Promise<void> {
+  const provider = await getProvider();
+  const el = document.getElementById("providerBadge")!;
+  if (provider === "ollama") {
+    el.textContent = "\ud83e\udd16 Ollama (lokal)";
+    el.style.color = "var(--orange)";
+  } else {
+    el.textContent = "\u2601\ufe0f Gemini (Cloud)";
+    el.style.color = "var(--purple)";
+  }
 }
 
 document.addEventListener("DOMContentLoaded", () => {
   void showSetup();
+  void updateProviderBadge();
   void updateCvStatus();
 });
 
@@ -46,7 +86,7 @@ async function updateCvStatus(): Promise<void> {
   const name = await get<string>(STORAGE_KEYS.cvFileName);
   const el = document.getElementById("cvStatus")!;
   if (name) {
-    el.textContent = `✓ Lebenslauf: ${name}`;
+    el.textContent = `\u2713 Lebenslauf: ${name}`;
     el.style.color = "var(--purple)";
   } else {
     el.textContent = "Es wurde kein Lebenslauf hinterlegt.";
@@ -73,7 +113,7 @@ document.getElementById("fileInput")!.addEventListener("change", async (e) => {
 
 async function sendAnalysisRequest(jobText?: string, jobSource?: string): Promise<void> {
   const resultEl = document.getElementById("result")!;
-  resultEl.innerHTML = "Analysiere…";
+  resultEl.innerHTML = "Analysiere\u2026";
   try {
     const response = await chrome.runtime.sendMessage({
       action: "ANALYZE_JOB",

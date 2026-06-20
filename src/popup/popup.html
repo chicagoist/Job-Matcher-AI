@@ -7,13 +7,14 @@
   <body>
     <div id="setup">
       <h1>Job Matcher</h1>
-      <p class="hint">Gemini-API-Schl&uuml;ssel hinterlegen:</p>
+      <p id="setupHint" class="hint">Gemini-API-Schl&uuml;ssel hinterlegen:</p>
       <input id="apiKey" type="password" placeholder="Schl&uuml;ssel eingeben&hellip;" />
       <button id="saveKey" class="btn primary">Speichern</button>
       <span id="keyError" class="err"></span>
     </div>
     <div id="main" hidden>
       <h1>Job Matcher</h1>
+      <div id="providerBadge" class="provider-badge"></div>
       <div class="row">
         <button id="analyzeBtn" class="btn primary">Stelle pr&uuml;fen</button>
         <button id="uploadBtn" class="btn">Lebenslauf</button>

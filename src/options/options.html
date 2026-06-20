@@ -11,10 +11,43 @@
       <h1>Einstellungen</h1>
 
       <section class="jm-card">
+        <h2>KI-Anbieter</h2>
+        <label class="jm-field">
+          <span>Anbieter</span>
+          <select id="provider">
+            <option value="ollama">Ollama (lokal, empfohlen)</option>
+            <option value="gemini">Gemini (Cloud)</option>
+          </select>
+        </label>
+      </section>
+
+      <section class="jm-card" id="ollamaSection">
+        <h2>Ollama</h2>
+        <p class="jm-hint">
+          Ollama läuft standardmäßig auf <code>http://localhost:11434</code>.
+          Ändere die Adresse nur, wenn Ollama auf einem anderen Host läuft.
+        </p>
+        <label class="jm-field">
+          <span>Ollama-Host</span>
+          <input id="ollamaHost" type="text" placeholder="http://localhost:11434" spellcheck="false" />
+        </label>
+        <div class="jm-row">
+          <button id="saveOllamaHost" class="jm-btn jm-btn--primary" type="button">Speichern</button>
+          <span id="ollamaHostStatus" class="jm-status"></span>
+        </div>
+        <label class="jm-field">
+          <span>Ollama-Modell</span>
+          <select id="ollamaModel">
+            <option value="">Modelle laden…</option>
+          </select>
+          <button id="refreshModels" class="jm-btn jm-btn--small" type="button" style="align-self:flex-start">Modelle neu laden</button>
+        </label>
+      </section>
+
+      <section class="jm-card" id="geminiSection">
         <h2>Gemini-API-Schlüssel</h2>
         <p class="jm-hint">
-          Der Schlüssel wird ausschließlich lokal in deinem Browser gespeichert und nur an
-          <code>generativelanguage.googleapis.com</code> gesendet.
+          Nur nötig, wenn Gemini als Anbieter ausgewählt ist.
         </p>
         <label class="jm-field">
           <span>API-Schlüssel</span>
@@ -25,18 +58,6 @@
           <button id="clearKey" class="jm-btn" type="button">Schlüssel entfernen</button>
           <span id="keyStatus" class="jm-status"></span>
         </div>
-      </section>
-
-      <section class="jm-card">
-        <h2>Modell</h2>
-        <label class="jm-field">
-          <span>Gemini-Modell</span>
-          <select id="model">
-            <option value="gemini-2.5-flash">gemini-2.5-flash (schnell, empfohlen)</option>
-            <option value="gemini-2.5-pro">gemini-2.5-pro (gründlicher)</option>
-            <option value="gemini-2.0-flash">gemini-2.0-flash</option>
-          </select>
-        </label>
       </section>
 
       <section class="jm-card">

@@ -1,7 +1,13 @@
 import { isAppMessage } from "../shared/message-contracts.js";
 import type { AppMessage, AnalyzeJobRequest } from "../shared/types.js";
 import { analyzeJob, solveAudio } from "./lib/cover-letter.js";
-import { JobMatcherError, MissingApiKeyError, MissingCvError } from "./lib/errors.js";
+import {
+  JobMatcherError,
+  MissingApiKeyError,
+  MissingCvError,
+  OllamaConnectionError,
+  OllamaServerError,
+} from "./lib/errors.js";
 
 declare const self: typeof globalThis;
 

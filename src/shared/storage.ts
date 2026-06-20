@@ -19,6 +19,40 @@ export async function clearApiKey(): Promise<void> {
   await chrome.storage.local.remove(STORAGE_KEYS.apiKey);
 }
 
+export async function getOllamaHost(): Promise<string> {
+  const r = await chrome.storage.local.get(STORAGE_KEYS.ollamaHost);
+  const v = r[STORAGE_KEYS.ollamaHost];
+  return typeof v === "string" && v.length > 0 ? v : DEFAULTS.ollamaHost;
+}
+
+export async function setOllamaHost(host: string): Promise<void> {
+  await chrome.storage.local.set({ [STORAGE_KEYS.ollamaHost]: host });
+}
+
+export async function getProvider(): Promise<string> {
+  const r = await chrome.storage.local.get(STORAGE_KEYS.provider);
+  const v = r[STORAGE_KEYS.provider];
+  return typeof v === "string" && (v === "ollama" || v === "gemini") ? v : DEFAULTS.provider;
+}
+
+export async function setProvider(provider: string): Promise<void> {
+  await chrome.storage.local.set({ [STORAGE_KEYS.provider]: provider });
+}
+
+export async function getCvText(): Promise<string | null> {
+  const r = await chrome.storage.local.get(STORAGE_KEYS.cvText);
+  const v = r[STORAGE_KEYS.cvText];
+  return typeof v === "string" && v.length > 0 ? v : null;
+}
+
+export async function setCvText(text: string): Promise<void> {
+  await chrome.storage.local.set({ [STORAGE_KEYS.cvText]: text });
+}
+
+export async function clearCvText(): Promise<void> {
+  await chrome.storage.local.remove(STORAGE_KEYS.cvText);
+}
+
 export interface StoredCv {
   dataUrl: string;
   meta: CvMetadata;
@@ -61,6 +95,7 @@ export async function setCv(dataUrl: string, fileName: string): Promise<CvMetada
 export async function clearCv(): Promise<void> {
   await chrome.storage.local.remove([
     STORAGE_KEYS.cvData,
+    STORAGE_KEYS.cvText,
     STORAGE_KEYS.cvFileName,
     STORAGE_KEYS.cvUploadedAt,
   ]);

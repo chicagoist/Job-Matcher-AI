@@ -66,6 +66,20 @@ export class PlatformNotSupportedError extends JobMatcherError {
   }
 }
 
+export class OllamaConnectionError extends JobMatcherError {
+  constructor() {
+    super("OLLAMA_CONNECTION", "Ollama läuft nicht. Starte Ollama und versuche es erneut.");
+    this.name = "OllamaConnectionError";
+  }
+}
+
+export class OllamaServerError extends JobMatcherError {
+  constructor(message: string) {
+    super("OLLAMA_SERVER", message);
+    this.name = "OllamaServerError";
+  }
+}
+
 export class JobFetchError extends JobMatcherError {
   constructor(platform: string, reason: string) {
     super("JOB_FETCH_ERROR", `Fehler beim Abruf von ${platform}: ${reason}`);

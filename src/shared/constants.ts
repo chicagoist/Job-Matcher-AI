@@ -1,6 +1,9 @@
 export const STORAGE_KEYS = {
   apiKey: "geminiKey",
+  ollamaHost: "ollamaHost",
+  provider: "provider",
   cvData: "cvData",
+  cvText: "cvText",
   cvFileName: "cvFileName",
   cvUploadedAt: "cvUploadedAt",
   threshold: "threshold",
@@ -11,14 +14,18 @@ export const STORAGE_KEYS = {
 
 export const DEFAULTS = {
   threshold: 8,
-  model: "gemini-2.5-flash",
+  model: "llama3.2:3b-instruct-q4_K_M",
   maxJobTextChars: 10_000,
   maxCvBytes: 5 * 1024 * 1024,
   maxHistoryEntries: 20,
   fetchTimeoutMs: 15_000,
+  ollamaHost: "http://localhost:11434",
+  provider: "ollama",
 } as const;
 
 export const GEMINI_ENDPOINT = "https://generativelanguage.googleapis.com/v1beta/models";
+export const OLLAMA_CHAT_ENDPOINT = "/api/chat";
+export const OLLAMA_TAGS_ENDPOINT = "/api/tags";
 
 export const TIMEOUTS = {
   apiRequestMs: 60_000,

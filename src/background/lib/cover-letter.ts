@@ -2,10 +2,20 @@ import type { AnalysisResult, HistoryEntry } from "../../shared/types.js";
 import { DEFAULTS } from "../../shared/constants.js";
 import { dataUrlToBase64, detectMime, cryptoRandomId } from "../../shared/utils.js";
 import { callGemini, type GeminiPart } from "./gemini-client.js";
+import { callOllama } from "./ollama-client.js";
+import { extractPdfText } from "./pdf-utils.js";
 import { SYSTEM_PROMPT, buildJobAnalysisPrompt } from "./prompts.js";
 import { parseAnalysis } from "./result-parser.js";
 import { MissingApiKeyError, MissingCvError, GeminiBadRequestError } from "./errors.js";
-import { getApiKey, getCv, getModel, getThreshold, appendHistory } from "../../shared/storage.js";
+import {
+  getApiKey,
+  getOllamaHost,
+  getProvider,
+  getCv,
+  getModel,
+  getThreshold,
+  appendHistory,
+} from "../../shared/storage.js";
 import { fetchJobData } from "./job-fetcher.js";
 import { detectPlatform, getDisplayName } from "./platform-detector.js";
 
@@ -21,36 +31,68 @@ export async function analyzeJob(args: AnalyzeArgs): Promise<{
   model: string;
   threshold: number;
 }> {
-  const apiKey = await getApiKey();
-  if (!apiKey) throw new MissingApiKeyError();
-
-  const cv = await getCv();
-  if (!cv) throw new MissingCvError();
+  const provider = await getProvider();
 
   const [model, threshold] = await Promise.all([getModel(), getThreshold()]);
 
   const job = await resolveJobText(args);
 
-  const userParts: GeminiPart[] = [
-    { text: buildJobAnalysisPrompt(threshold) },
-    { text: `STELLENANZEIGE (Quelle: ${job.source || "Unbekannt"}):\n${job.text}` },
-    {
-      inline_data: {
-        mime_type: detectMime(cv.dataUrl),
-        data: dataUrlToBase64(cv.dataUrl),
+  let responseText: string;
+  let usedModel: string;
+
+  if (provider === "ollama") {
+    const cv = await getCv();
+    if (!cv) throw new MissingCvError();
+
+    const host = await getOllamaHost();
+    const cvText = await extractPdfText(cv.dataUrl);
+
+    const userContent = [
+      buildJobAnalysisPrompt(threshold),
+      `STELLENANZEIGE (Quelle: ${job.source || "Unbekannt"}):\n${job.text}`,
+      `LEBENSLAUF (Text aus PDF extrahiert):\n${cvText}`,
+    ].join("\n\n");
+
+    const response = await callOllama({
+      host,
+      model,
+      systemPrompt: SYSTEM_PROMPT,
+      userContent,
+    });
+
+    responseText = response.text;
+    usedModel = response.model;
+  } else {
+    const apiKey = await getApiKey();
+    if (!apiKey) throw new MissingApiKeyError();
+
+    const cv = await getCv();
+    if (!cv) throw new MissingCvError();
+
+    const userParts: GeminiPart[] = [
+      { text: buildJobAnalysisPrompt(threshold) },
+      { text: `STELLENANZEIGE (Quelle: ${job.source || "Unbekannt"}):\n${job.text}` },
+      {
+        inline_data: {
+          mime_type: detectMime(cv.dataUrl),
+          data: dataUrlToBase64(cv.dataUrl),
+        },
       },
-    },
-    { text: "Hinweis: Der Lebenslauf wurde als PDF-Datei oben angehängt." },
-  ];
+      { text: "Hinweis: Der Lebenslauf wurde als PDF-Datei oben angehängt." },
+    ];
 
-  const response = await callGemini({
-    apiKey,
-    model,
-    systemInstruction: SYSTEM_PROMPT,
-    userParts,
-  });
+    const response = await callGemini({
+      apiKey,
+      model,
+      systemInstruction: SYSTEM_PROMPT,
+      userParts,
+    });
 
-  const result = parseAnalysis(response.text);
+    responseText = response.text;
+    usedModel = response.model;
+  }
+
+  const result = parseAnalysis(responseText);
 
   const entry: HistoryEntry = {
     id: cryptoRandomId(),
@@ -63,7 +105,7 @@ export async function analyzeJob(args: AnalyzeArgs): Promise<{
   };
   await appendHistory(entry);
 
-  return { result, model: response.model, threshold };
+  return { result, model: usedModel, threshold };
 }
 
 export async function solveAudio(audioDataUrl: string, mimeType: string): Promise<{

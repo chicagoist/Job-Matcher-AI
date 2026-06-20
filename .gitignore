@@ -56,6 +56,15 @@ Desktop.ini
 
 # Local/Agent configurations
 .opencode/
+
+# Browser smoke test profiles
+.ff-smoke-profile/
+.playwright-mcp/
+
+# Screenshots from smoke tests
+*.png
+ff-*.png
+indeed-*.png
 opencode.json
 __pycache__/
 *.pyc

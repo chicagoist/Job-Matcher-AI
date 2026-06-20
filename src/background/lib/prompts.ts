@@ -35,7 +35,7 @@ export const responseSchema = {
 } as const;
 
 export const SYSTEM_PROMPT = `Du bist ein professioneller HR-Assistent.
-Du erhältst zwei Dokumente: (1) den Text einer Stellenanzeige und (2) den Lebenslauf eines Kandidaten (PDF).
+Du erhältst zwei Dokumente: (1) den Text einer Stellenanzeige und (2) den Lebenslauf eines Kandidaten als Text.
 Deine Aufgaben:
 1. Vergleiche die Anforderungen der Stelle mit den Erfahrungen und Fähigkeiten des Lebenslaufs.
 2. Bewerte die Übereinstimmung auf einer Skala von 1 bis 10.
@@ -48,7 +48,17 @@ Regeln für das Anschreiben:
 - Struktur: Anrede, kurze Einleitung mit Bezug auf die Stelle, 2-3 Absätze zu passenden Erfahrungen, Motivation für das Unternehmen, freundlicher Abschluss, Grußformel.
 - Keine erfundenen Fakten. Ausschließlich auf Basis des Lebenslaufs.
 - Keine Platzhalter wie [Name], [Adresse] etc.
-Antworte ausschließlich als valides JSON gemäß dem vorgegebenen Schema.`;
+
+Antworte ausschließlich als valides JSON-Objekt mit folgendem Schema:
+{
+  "score": <INTEGER 1-10>,
+  "reasoning": "<STRING – kurze Begründung 2-4 Sätze>",
+  "coverLetter": "<STRING|NULL – Anschreiben wenn score >= Schwellwert, sonst null>",
+  "language": "<STRING – ISO 639-1 Sprachcode der Stellenanzeige, z.B. de oder en>",
+  "matchedSkills": ["<STRING – passende Fähigkeit>", ...],
+  "missingSkills": ["<STRING – fehlende Fähigkeit>", ...]
+}
+Wichtig: coverLetter muss null sein, wenn der score unter dem Schwellwert liegt.`;
 
 export function buildJobAnalysisPrompt(threshold: number): string {
   return `Analysiere die nachfolgende Stellenanzeige im Vergleich zum Lebenslauf.
