@@ -10,17 +10,20 @@ export const STORAGE_KEYS = {
   model: "model",
   panelPosition: "panelPosition",
   history: "history",
+  allowCloudFallback: "allowCloudFallback",
+  lastUsedProvider: "lastUsedProvider",
 } as const;
 
 export const DEFAULTS = {
   threshold: 8,
-  model: "llama3.2:3b-instruct-q4_K_M",
+  model: "llama3.2:3b-chat-assistant",
   maxJobTextChars: 10_000,
   maxCvBytes: 5 * 1024 * 1024,
   maxHistoryEntries: 20,
   fetchTimeoutMs: 15_000,
   ollamaHost: "http://localhost:11434",
   provider: "ollama",
+  allowCloudFallback: false,
 } as const;
 
 export const GEMINI_ENDPOINT = "https://generativelanguage.googleapis.com/v1beta/models";

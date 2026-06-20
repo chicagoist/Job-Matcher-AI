@@ -129,6 +129,21 @@ h2 {
   accent-color: var(--orange);
 }
 
+.jm-field--checkbox {
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.jm-field--checkbox input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--orange);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
 .jm-row {
   display: flex;
   align-items: center;

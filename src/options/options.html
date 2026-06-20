@@ -42,6 +42,14 @@
           </select>
           <button id="refreshModels" class="jm-btn jm-btn--small" type="button" style="align-self:flex-start">Modelle neu laden</button>
         </label>
+        <label class="jm-field jm-field--checkbox">
+          <input id="allowCloudFallback" type="checkbox" />
+          <span>Cloud-Fallback erlauben (bei Zeitüberschreitung auf Gemini umschalten)</span>
+        </label>
+        <p class="jm-hint" style="margin-top:8px">
+          Wenn aktiviert und Ollama nicht rechtzeitig antwortet, wird automatisch Gemini als Fallback verwendet.
+          Dafür muss ein Gemini-API-Schlüssel hinterlegt sein.
+        </p>
       </section>
 
       <section class="jm-card" id="geminiSection">

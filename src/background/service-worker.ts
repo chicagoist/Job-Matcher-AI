@@ -37,13 +37,13 @@ async function handleMessage(message: AppMessage, tabId: number | undefined) {
       }
       const payload = (message.payload ?? {}) as AnalyzeJobRequest;
       try {
-        const { result, model, threshold } = await analyzeJob({
+        const { result, model, threshold, usedFallback, usedProvider } = await analyzeJob({
           tabId,
           jobText: payload.jobText,
           jobSource: payload.jobSource,
           jobUrl: payload.jobUrl,
         });
-        return { ok: true, result, model, threshold };
+        return { ok: true, result, model, threshold, usedFallback, usedProvider };
       } catch (e) {
         return { error: toErrorMessage(e) };
       }

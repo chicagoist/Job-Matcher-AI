@@ -157,6 +157,26 @@ export async function clearHistory(): Promise<void> {
   await chrome.storage.local.remove(STORAGE_KEYS.history);
 }
 
+export async function getAllowCloudFallback(): Promise<boolean> {
+  const r = await chrome.storage.local.get(STORAGE_KEYS.allowCloudFallback);
+  const v = r[STORAGE_KEYS.allowCloudFallback];
+  return typeof v === "boolean" ? v : DEFAULTS.allowCloudFallback;
+}
+
+export async function setAllowCloudFallback(value: boolean): Promise<void> {
+  await chrome.storage.local.set({ [STORAGE_KEYS.allowCloudFallback]: value });
+}
+
+export async function getLastUsedProvider(): Promise<string | null> {
+  const r = await chrome.storage.local.get(STORAGE_KEYS.lastUsedProvider);
+  const v = r[STORAGE_KEYS.lastUsedProvider];
+  return typeof v === "string" ? v : null;
+}
+
+export async function setLastUsedProvider(value: string): Promise<void> {
+  await chrome.storage.local.set({ [STORAGE_KEYS.lastUsedProvider]: value });
+}
+
 function estimateBase64Bytes(dataUrl: string): number {
   const idx = dataUrl.indexOf(",");
   const b64 = idx >= 0 ? dataUrl.slice(idx + 1) : dataUrl;

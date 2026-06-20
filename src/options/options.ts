@@ -14,6 +14,8 @@ import {
   clearCv as clearStoredCv,
   getHistory,
   clearHistory as clearStoredHistory,
+  getAllowCloudFallback,
+  setAllowCloudFallback,
 } from "../shared/storage.js";
 import type { HistoryEntry } from "../shared/types.js";
 import { DEFAULTS } from "../shared/constants.js";
@@ -32,6 +34,7 @@ async function init(): Promise<void> {
   const ollamaHostStatus = document.getElementById("ollamaHostStatus") as HTMLElement;
   const ollamaModelSelect = document.getElementById("ollamaModel") as HTMLSelectElement;
   const refreshModelsBtn = document.getElementById("refreshModels") as HTMLButtonElement;
+  const allowCloudFallbackCheckbox = document.getElementById("allowCloudFallback") as HTMLInputElement;
   const threshold = document.getElementById("threshold") as HTMLInputElement;
   const thresholdLabel = document.getElementById("thresholdLabel") as HTMLElement;
   const cvInfo = document.getElementById("cvInfo") as HTMLElement;
@@ -53,6 +56,9 @@ async function init(): Promise<void> {
 
   const currentModel = await getModel();
   await populateOllamaModels(ollamaModelSelect, host, currentModel);
+
+  const allowFallback = await getAllowCloudFallback();
+  allowCloudFallbackCheckbox.checked = allowFallback;
 
   const currentThreshold = await getThreshold();
   threshold.value = String(currentThreshold);
@@ -105,6 +111,10 @@ async function init(): Promise<void> {
 
   ollamaModelSelect.addEventListener("change", async () => {
     await setModel(ollamaModelSelect.value);
+  });
+
+  allowCloudFallbackCheckbox.addEventListener("change", async () => {
+    await setAllowCloudFallback(allowCloudFallbackCheckbox.checked);
   });
 
   refreshModelsBtn.addEventListener("click", async () => {

@@ -15,6 +15,9 @@ import {
   getModel,
   getThreshold,
   appendHistory,
+  getAllowCloudFallback,
+  setLastUsedProvider,
+  getLastUsedProvider,
 } from "../../shared/storage.js";
 import { fetchJobData } from "./job-fetcher.js";
 import { detectPlatform, getDisplayName } from "./platform-detector.js";
@@ -30,6 +33,8 @@ export async function analyzeJob(args: AnalyzeArgs): Promise<{
   result: AnalysisResult;
   model: string;
   threshold: number;
+  usedFallback: boolean;
+  usedProvider: string;
 }> {
   const provider = await getProvider();
 
@@ -39,6 +44,8 @@ export async function analyzeJob(args: AnalyzeArgs): Promise<{
 
   let responseText: string;
   let usedModel: string;
+  let usedProvider = provider;
+  let usedFallback = false;
 
   if (provider === "ollama") {
     const cv = await getCv();
@@ -53,15 +60,47 @@ export async function analyzeJob(args: AnalyzeArgs): Promise<{
       `LEBENSLAUF (Text aus PDF extrahiert):\n${cvText}`,
     ].join("\n\n");
 
-    const response = await callOllama({
-      host,
-      model,
-      systemPrompt: SYSTEM_PROMPT,
-      userContent,
-    });
+    try {
+      const response = await callOllama({
+        host,
+        model,
+        systemPrompt: SYSTEM_PROMPT,
+        userContent,
+      });
+      responseText = response.text;
+      usedModel = response.model;
+    } catch (ollamaErr) {
+      const allowFallback = await getAllowCloudFallback();
+      if (!allowFallback) throw ollamaErr;
 
-    responseText = response.text;
-    usedModel = response.model;
+      const apiKey = await getApiKey();
+      if (!apiKey) throw ollamaErr;
+
+      const geminiModel = "gemini-2.0-flash-lite";
+      const userParts: GeminiPart[] = [
+        { text: buildJobAnalysisPrompt(threshold) },
+        { text: `STELLENANZEIGE (Quelle: ${job.source || "Unbekannt"}):\n${job.text}` },
+        {
+          inline_data: {
+            mime_type: detectMime(cv.dataUrl),
+            data: dataUrlToBase64(cv.dataUrl),
+          },
+        },
+        { text: "Hinweis: Der Lebenslauf wurde als PDF-Datei oben angehängt." },
+      ];
+
+      const geminiResponse = await callGemini({
+        apiKey,
+        model: geminiModel,
+        systemInstruction: SYSTEM_PROMPT,
+        userParts,
+      });
+
+      responseText = geminiResponse.text;
+      usedModel = geminiResponse.model;
+      usedProvider = "gemini-fallback";
+      usedFallback = true;
+    }
   } else {
     const apiKey = await getApiKey();
     if (!apiKey) throw new MissingApiKeyError();
@@ -94,6 +133,10 @@ export async function analyzeJob(args: AnalyzeArgs): Promise<{
 
   const result = parseAnalysis(responseText);
 
+  if (usedProvider !== provider) {
+    await setLastUsedProvider(usedProvider);
+  }
+
   const entry: HistoryEntry = {
     id: cryptoRandomId(),
     createdAt: Date.now(),
@@ -105,7 +148,7 @@ export async function analyzeJob(args: AnalyzeArgs): Promise<{
   };
   await appendHistory(entry);
 
-  return { result, model: usedModel, threshold };
+  return { result, model: usedModel, threshold, usedFallback, usedProvider };
 }
 
 export async function solveAudio(audioDataUrl: string, mimeType: string): Promise<{

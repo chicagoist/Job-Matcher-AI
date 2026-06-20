@@ -127,6 +127,9 @@ async function sendAnalysisRequest(jobText?: string, jobSource?: string): Promis
     const scoreClass = r.score >= 7 ? "high" : r.score >= 4 ? "mid" : "low";
     const scoreColor = scoreClass === "high" ? "#2e7d32" : scoreClass === "mid" ? "#c66900" : "#c62828";
     let html = `<div class="score" style="color:${scoreColor}">${r.score}/10</div>`;
+    if (response.usedFallback) {
+      html += `<div style="font-size:11px;color:var(--muted);margin:4px 0"><em>Cloud-Fallback (${esc(response.usedProvider || "Gemini")})</em></div>`;
+    }
     html += `<div class="reasoning">${esc(r.reasoning)}</div>`;
     if (r.matchedSkills?.length) {
       html += `<div class="list"><strong>Passend:</strong> ${r.matchedSkills.map(esc).join(", ")}</div>`;
