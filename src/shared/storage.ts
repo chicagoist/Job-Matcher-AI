@@ -113,14 +113,44 @@ export async function setThreshold(value: number): Promise<void> {
   await chrome.storage.local.set({ [STORAGE_KEYS.threshold]: clamped });
 }
 
+async function getStoredValue(key: string): Promise<string | null> {
+  const r = await chrome.storage.local.get(key);
+  const v = r[key];
+  return typeof v === "string" && v.length > 0 ? v : null;
+}
+
+export async function getOllamaModel(): Promise<string> {
+  return (await getStoredValue(STORAGE_KEYS.ollamaModel))
+    ?? (await getStoredValue(STORAGE_KEYS.model))
+    ?? DEFAULTS.ollamaModel;
+}
+
+export async function setOllamaModel(model: string): Promise<void> {
+  await chrome.storage.local.set({ [STORAGE_KEYS.ollamaModel]: model });
+}
+
+export async function getGeminiModel(): Promise<string> {
+  return (await getStoredValue(STORAGE_KEYS.geminiModel))
+    ?? (await getStoredValue(STORAGE_KEYS.model))
+    ?? DEFAULTS.geminiModel;
+}
+
+export async function setGeminiModel(model: string): Promise<void> {
+  await chrome.storage.local.set({ [STORAGE_KEYS.geminiModel]: model });
+}
+
 export async function getModel(): Promise<string> {
-  const r = await chrome.storage.local.get(STORAGE_KEYS.model);
-  const v = r[STORAGE_KEYS.model];
-  return typeof v === "string" && v.length > 0 ? v : DEFAULTS.model;
+  const provider = await getProvider();
+  return provider === "gemini" ? getGeminiModel() : getOllamaModel();
 }
 
 export async function setModel(model: string): Promise<void> {
-  await chrome.storage.local.set({ [STORAGE_KEYS.model]: model });
+  const provider = await getProvider();
+  if (provider === "gemini") {
+    await setGeminiModel(model);
+  } else {
+    await setOllamaModel(model);
+  }
 }
 
 export async function getPanelPosition(): Promise<PanelPosition | null> {

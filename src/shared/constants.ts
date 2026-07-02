@@ -8,6 +8,8 @@ export const STORAGE_KEYS = {
   cvUploadedAt: "cvUploadedAt",
   threshold: "threshold",
   model: "model",
+  ollamaModel: "ollamaModel",
+  geminiModel: "geminiModel",
   panelPosition: "panelPosition",
   history: "history",
   allowCloudFallback: "allowCloudFallback",
@@ -17,6 +19,8 @@ export const STORAGE_KEYS = {
 export const DEFAULTS = {
   threshold: 8,
   model: "llama3.2:3b-hr-assistant",
+  ollamaModel: "llama3.2:3b-hr-assistant",
+  geminiModel: "gemini-2.5-flash-lite",
   maxJobTextChars: 10_000,
   maxCvBytes: 5 * 1024 * 1024,
   maxHistoryEntries: 20,

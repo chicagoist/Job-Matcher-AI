@@ -7,6 +7,7 @@ import { BadRequestError, MissingApiKeyError } from "./errors.js";
 import {
   getProvider,
   getModel,
+  getGeminiModel,
   getThreshold,
   getApiKey,
   appendHistory,
@@ -76,7 +77,7 @@ export async function solveAudio(audioDataUrl: string, mimeType: string): Promis
   const apiKey = await getApiKey();
   if (!apiKey) throw new MissingApiKeyError();
 
-  const model = await getModel();
+  const model = await getGeminiModel();
 
   const userParts: GeminiPart[] = [
     {
