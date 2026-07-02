@@ -1,4 +1,5 @@
 import { OLLAMA_CHAT_ENDPOINT, TIMEOUTS } from "../../shared/constants.js";
+import { sleep, withTimeout } from "../../shared/utils.js";
 import { OllamaConnectionError, OllamaServerError, JobMatcherError } from "./errors.js";
 
 export interface OllamaRequest {
@@ -19,16 +20,6 @@ interface OllamaResponseWire {
   message?: { content?: string };
   error?: string;
   model?: string;
-}
-
-function sleep(ms: number): Promise<void> {
-  return new Promise((res) => setTimeout(res, ms));
-}
-
-function withTimeout(ms: number): { signal: AbortSignal; cancel: () => void } {
-  const ctrl = new AbortController();
-  const timer = setTimeout(() => ctrl.abort(), ms);
-  return { signal: ctrl.signal, cancel: () => clearTimeout(timer) };
 }
 
 function isRetryable(err: unknown): boolean {

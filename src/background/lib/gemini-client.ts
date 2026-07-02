@@ -1,4 +1,5 @@
 import { GEMINI_ENDPOINT, TIMEOUTS } from "../../shared/constants.js";
+import { sleep, withTimeout } from "../../shared/utils.js";
 import { responseSchema } from "./prompts.js";
 import {
   GeminiAuthError,
@@ -39,19 +40,6 @@ interface GeminiResponseWire {
   candidates?: GeminiCandidate[];
   error?: { message?: string; status?: string; code?: number };
 }
-
-
-
-function sleep(ms: number): Promise<void> {
-  return new Promise((res) => setTimeout(res, ms));
-}
-
-function withTimeout(ms: number): { signal: AbortSignal; cancel: () => void } {
-  const ctrl = new AbortController();
-  const timer = setTimeout(() => ctrl.abort(), ms);
-  return { signal: ctrl.signal, cancel: () => clearTimeout(timer) };
-}
-
 function classifyStatus(status: number, message: string): JobMatcherError {
   if (status === 401 || status === 403) return new GeminiAuthError(message);
   if (status === 429) return new GeminiRateLimitError(message);

@@ -28,3 +28,15 @@ export function cryptoRandomId(): string {
   }
   return Math.random().toString(36).slice(2) + Date.now().toString(36);
 }
+
+/** Promise-basierte Verzögerung. */
+export function sleep(ms: number): Promise<void> {
+  return new Promise((res) => setTimeout(res, ms));
+}
+
+/** AbortSignal mit Timeout erzeugen. */
+export function withTimeout(ms: number): { signal: AbortSignal; cancel: () => void } {
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), ms);
+  return { signal: ctrl.signal, cancel: () => clearTimeout(timer) };
+}
