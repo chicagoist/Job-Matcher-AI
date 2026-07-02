@@ -126,7 +126,7 @@
     "message": "Verarbeitet von: $1",
     "description": "Fußzeile mit dem Namen des Modells.",
     "placeholders": {
-      "1": { "content": "$1", "example": "gemini-2.5-flash" }
+      "1": { "content": "$1", "example": "gemini-2.5-flash-lite" }
     }
   },
   "errorPrefix": {

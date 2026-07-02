@@ -76,7 +76,6 @@ export async function analyzeJob(args: AnalyzeArgs): Promise<{
       const apiKey = await getApiKey();
       if (!apiKey) throw ollamaErr;
 
-      const geminiModel = "gemini-2.0-flash-lite";
       const userParts: GeminiPart[] = [
         { text: buildJobAnalysisPrompt(threshold) },
         { text: `STELLENANZEIGE (Quelle: ${job.source || "Unbekannt"}):\n${job.text}` },
@@ -91,7 +90,7 @@ export async function analyzeJob(args: AnalyzeArgs): Promise<{
 
       const geminiResponse = await callGemini({
         apiKey,
-        model: geminiModel,
+        model,
         systemInstruction: SYSTEM_PROMPT,
         userParts,
       });
@@ -204,20 +203,30 @@ async function resolveJobText(args: AnalyzeArgs): Promise<{
     };
   }
 
-  const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
-  const tab = tabs[0];
-  if (!tab?.url || !tab.id) {
+  let tabUrl: string | undefined;
+  if (args.tabId) {
+    try {
+      const tab = await chrome.tabs.get(args.tabId);
+      tabUrl = tab.url;
+    } catch {}
+  }
+  if (!tabUrl) {
+    const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+    tabUrl = tabs[0]?.url;
+  }
+
+  if (!tabUrl) {
     throw new GeminiBadRequestError("Keine aktive Job-Seite gefunden.");
   }
 
-  const platform = detectPlatform(tab.url);
+  const platform = detectPlatform(tabUrl);
   if (!platform) {
     throw new GeminiBadRequestError(
       "Diese Seite wird nicht als Job-Plattform erkannt. Bitte fügen Sie die Stellenanzeige manuell ein.",
     );
   }
 
-  const data = await fetchJobData(tab.url);
+  const data = await fetchJobData(tabUrl);
   return {
     text: data.description,
     source: `${getDisplayName(data.platform)} (JSON-LD)`,

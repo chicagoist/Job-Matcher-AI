@@ -2,7 +2,7 @@
 // Tests the actual Ollama inference with realistic job matching data
 
 const OLLAMA_URL = 'http://127.0.0.1:11434';
-const MODEL = 'llama3.2:3b-chat-assistant';
+const MODEL = 'llama3.2:3b-hr-assistant';
 
 const SYSTEM_PROMPT = `You are a career advisor. Analyze the CV and job description.
 Respond ONLY with valid JSON using this exact schema:

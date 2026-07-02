@@ -16,7 +16,7 @@ export const STORAGE_KEYS = {
 
 export const DEFAULTS = {
   threshold: 8,
-  model: "llama3.2:3b-chat-assistant",
+  model: "llama3.2:3b-hr-assistant",
   maxJobTextChars: 10_000,
   maxCvBytes: 5 * 1024 * 1024,
   maxHistoryEntries: 20,

@@ -53,7 +53,7 @@
       </section>
 
       <section class="jm-card" id="geminiSection">
-        <h2>Gemini-API-Schlüssel</h2>
+        <h2>Gemini (Cloud)</h2>
         <p class="jm-hint">
           Nur nötig, wenn Gemini als Anbieter ausgewählt ist.
         </p>
@@ -66,6 +66,13 @@
           <button id="clearKey" class="jm-btn" type="button">Schlüssel entfernen</button>
           <span id="keyStatus" class="jm-status"></span>
         </div>
+        <label class="jm-field">
+          <span>Modell</span>
+          <select id="geminiModel">
+            <option value="gemini-2.5-flash-lite">gemini-2.5-flash-lite</option>
+            <option value="gemma-4-26b-a4b-it">gemma-4-26b-a4b-it</option>
+          </select>
+        </label>
       </section>
 
       <section class="jm-card">

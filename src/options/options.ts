@@ -11,6 +11,7 @@ import {
   setThreshold,
   getThreshold,
   getCv,
+  setCv as storeCv,
   clearCv as clearStoredCv,
   getHistory,
   clearHistory as clearStoredHistory,
@@ -56,6 +57,10 @@ async function init(): Promise<void> {
 
   const currentModel = await getModel();
   await populateOllamaModels(ollamaModelSelect, host, currentModel);
+  const geminiModelSelect = document.getElementById("geminiModel") as HTMLSelectElement;
+  if (currentModel.startsWith("gemini-") || currentModel.startsWith("gemma-")) {
+    geminiModelSelect.value = currentModel;
+  }
 
   const allowFallback = await getAllowCloudFallback();
   allowCloudFallbackCheckbox.checked = allowFallback;
@@ -75,6 +80,11 @@ async function init(): Promise<void> {
   providerSelect.addEventListener("change", async () => {
     await setProvider(providerSelect.value);
     toggleProviderSections(providerSelect.value, ollamaSection, geminiSection);
+    if (providerSelect.value === "gemini") {
+      await setModel("gemini-2.5-flash-lite");
+    } else {
+      await setModel(DEFAULTS.model);
+    }
   });
 
   saveKey.addEventListener("click", async () => {
@@ -113,6 +123,10 @@ async function init(): Promise<void> {
     await setModel(ollamaModelSelect.value);
   });
 
+  geminiModelSelect.addEventListener("change", async () => {
+    await setModel(geminiModelSelect.value);
+  });
+
   allowCloudFallbackCheckbox.addEventListener("change", async () => {
     await setAllowCloudFallback(allowCloudFallbackCheckbox.checked);
   });
@@ -127,6 +141,21 @@ async function init(): Promise<void> {
   });
   threshold.addEventListener("change", async () => {
     await setThreshold(parseInt(threshold.value, 10));
+  });
+
+  const optionsFileInput = document.getElementById("optionsFileInput") as HTMLInputElement;
+  optionsFileInput.addEventListener("change", async (e) => {
+    const file = (e.target as HTMLInputElement).files?.[0];
+    if (!file || !file.name.toLowerCase().endsWith(".pdf")) return;
+    const reader = new FileReader();
+    reader.onload = async () => {
+      await storeCv(String(reader.result), file.name);
+      const cv = await getCv();
+      if (cv) {
+        cvInfo.textContent = `Hochgeladen: ${cv.meta.fileName} (${formatBytes(cv.meta.sizeBytes)})`;
+      }
+    };
+    reader.readAsDataURL(file);
   });
 
   clearCvBtn.addEventListener("click", async () => {

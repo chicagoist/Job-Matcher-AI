@@ -2,6 +2,7 @@ import { build, context } from "esbuild";
 import { copyFile, mkdir, rm } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 
 const ROOT = path.resolve(process.cwd());
 const SRC = path.join(ROOT, "src");
@@ -30,6 +31,10 @@ async function copyStatic() {
     await mkdir(path.dirname(dstPath), { recursive: true });
     await copyFile(srcPath, dstPath);
   }
+
+  const pdfjsWorkerSrc = path.join(ROOT, "node_modules/pdfjs-dist/legacy/build/pdf.worker.min.mjs");
+  const pdfjsWorkerDst = path.join(DIST, "pdf.worker.mjs");
+  await copyFile(pdfjsWorkerSrc, pdfjsWorkerDst);
 }
 
 const common = {

@@ -11,20 +11,101 @@ import {
 
 declare const self: typeof globalThis;
 
-chrome.action.onClicked.addListener((tab) => {
-  if (tab.id === undefined) return;
-  chrome.tabs
-    .sendMessage(tab.id, { action: "TOGGLE_PANEL" } satisfies AppMessage)
-    .catch(() => {});
+let lastActiveTabId: number | undefined;
+let lastNormalWindowId: number | undefined;
+
+chrome.windows.getAll({ populate: false }).then((windows) => {
+  const normalWindows = windows.filter((w) => w.type === "normal");
+  if (normalWindows.length > 0) {
+    const focused = normalWindows.find((w) => w.focused);
+    lastNormalWindowId = focused ? focused.id : normalWindows[normalWindows.length - 1].id;
+  }
+}).catch(() => {});
+
+chrome.windows.onFocusChanged.addListener(async (windowId) => {
+  if (windowId === chrome.windows.WINDOW_ID_NONE) return;
+  try {
+    const win = await chrome.windows.get(windowId);
+    if (win.type === "normal") {
+      lastNormalWindowId = windowId;
+    }
+  } catch {}
 });
+
+chrome.action.onClicked.addListener(async (tab) => {
+  if (tab?.id) lastActiveTabId = tab.id;
+
+  const windows = await chrome.windows.getAll({ populate: true });
+  const existingWindow = windows.find((win) =>
+    win.tabs?.some((t) => t.url && t.url.includes("popup.html"))
+  );
+  if (existingWindow && existingWindow.id !== undefined) {
+    try {
+      await chrome.windows.update(existingWindow.id, { focused: true });
+      return;
+    } catch {}
+  }
+
+  let left: number | undefined;
+  let top: number | undefined;
+  if (lastNormalWindowId) {
+    try {
+      const mainWin = await chrome.windows.get(lastNormalWindowId);
+      if (mainWin.left !== undefined && mainWin.width !== undefined && mainWin.top !== undefined) {
+        left = Math.round(mainWin.left + mainWin.width - 440);
+        top = Math.round(mainWin.top + 80);
+      }
+    } catch {}
+  }
+
+  await chrome.windows.create({
+    url: chrome.runtime.getURL("popup.html"),
+    type: "popup",
+    width: 420,
+    height: 560,
+    left,
+    top,
+    focused: true,
+  });
+});
+
+async function findActiveWebTab(): Promise<number | undefined> {
+  if (lastNormalWindowId) {
+    try {
+      const tabs = await chrome.tabs.query({ active: true, windowId: lastNormalWindowId });
+      if (tabs[0]?.id) return tabs[0].id;
+    } catch {}
+  }
+  const extPrefix = chrome.runtime.getURL("");
+  const tabs = await chrome.tabs.query({ active: true });
+  const webTab = tabs.find((t) => t.id && t.url && !t.url.startsWith(extPrefix));
+  return webTab?.id;
+}
+
+async function resolveWebTabId(sender: chrome.runtime.MessageSender): Promise<number | undefined> {
+  const extUrlPrefix = chrome.runtime.getURL("");
+  if (sender.tab?.id != null && sender.url && !sender.url.startsWith(extUrlPrefix)) {
+    return sender.tab.id;
+  }
+  const webTabId = await findActiveWebTab();
+  if (webTabId) return webTabId;
+  if (lastActiveTabId) return lastActiveTabId;
+  return undefined;
+}
+
+function safeSendResponse(sendResponse: (r: unknown) => void, response: unknown): void {
+  try { sendResponse(response); } catch {}
+}
 
 chrome.runtime.onMessage.addListener((raw, sender, sendResponse) => {
   if (!isAppMessage(raw)) return;
   const message = raw;
-  void handleMessage(message, sender.tab?.id)
-    .then((response) => sendResponse(response))
+  void resolveWebTabId(sender).then((tabId) =>
+    handleMessage(message, tabId)
+  )
+    .then((response) => safeSendResponse(sendResponse, response))
     .catch((err: unknown) => {
-      sendResponse({ error: toErrorMessage(err) });
+      safeSendResponse(sendResponse, { error: toErrorMessage(err) });
     });
   return true;
 });

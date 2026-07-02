@@ -1,11 +1,12 @@
 import * as pdfjs from "pdfjs-dist/legacy/build/pdf.mjs";
 
-pdfjs.GlobalWorkerOptions.workerSrc = "";
+pdfjs.GlobalWorkerOptions.workerSrc = chrome.runtime.getURL("pdf.worker.mjs");
 
 export async function extractPdfText(dataUrl: string): Promise<string> {
   const res = await fetch(dataUrl);
   const buffer = await res.arrayBuffer();
-  const pdf = await pdfjs.getDocument({ data: buffer }).promise;
+  const loadingTask = pdfjs.getDocument({ data: buffer });
+  const pdf = await loadingTask.promise;
   const pages: string[] = [];
   for (let i = 1; i <= pdf.numPages; i++) {
     const page = await pdf.getPage(i);
@@ -14,6 +15,6 @@ export async function extractPdfText(dataUrl: string): Promise<string> {
     pages.push(text);
     page.cleanup();
   }
-  pdf.destroy();
+  await loadingTask.destroy();
   return pages.join("\n\n").replace(/\s+/g, " ").trim();
 }

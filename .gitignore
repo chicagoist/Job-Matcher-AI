@@ -9,6 +9,8 @@ web-ext-artifacts/
 *.zip
 *.tar.gz
 *.tgz
+*.png
+!docs/Einstellungen.png
 
 # Environment Variables & Secrets
 .env
@@ -54,6 +56,9 @@ ehthumbs.db
 Thumbs.db
 Desktop.ini
 
+# Backup files
+*.bak
+
 # Local/Agent configurations
 .opencode/
 
@@ -65,6 +70,17 @@ Desktop.ini
 *.png
 ff-*.png
 indeed-*.png
+
+# Python CLI (removed from project)
+job_matcher_ai/
+pyproject.toml
+requirements.txt
+.env.example
+tests/**/*.py
+tests/**/__init__.py
+
+# Session logs with potential secrets
+docs/session-*.md
 opencode.json
 __pycache__/
 *.pyc
