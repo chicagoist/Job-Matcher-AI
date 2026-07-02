@@ -27,7 +27,7 @@ describe("detectPlatform", () => {
     const r = detectPlatform("https://www.linkedin.com/jobs/view/4012345678/");
     expect(r).not.toBeNull();
     expect(r!.platform).toBe("linkedin");
-    expect(r!.strategy).toBe("json-ld");
+    expect(r!.strategy).toBe("guest-api");
     expect(r!.jobId).toBe("4012345678");
   });
 

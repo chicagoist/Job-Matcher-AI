@@ -13,7 +13,7 @@ const KIMETA_PATTERN = /kimeta\.de/i;
 const JOBWARE_PATTERN = /jobware\.de/i;
 
 const STEPSTONE_JOBID_PATTERN = /--(\d+)-inline\.html$/;
-const LINKEDIN_JOBID_PATTERN = /\/jobs\/view\/(\d+)\/?/;
+const LINKEDIN_JOBID_PATTERN = /\/jobs\/view\/(?:.*?)(\d{7,})/;
 const MONSTER_JOBID_PATTERN = /\/(\d+)(?:\?|$)/;
 
 export interface PlatformConfig {
@@ -52,7 +52,7 @@ export function detectPlatform(url: string): PlatformInfo | null {
     return {
       platform: "linkedin",
       jobId,
-      strategy: jobId ? "json-ld" : "guest-api",
+      strategy: "guest-api",
     };
   }
 

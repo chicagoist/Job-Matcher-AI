@@ -85,6 +85,9 @@ export async function fetchViaLinkedInGuestApi(
   platform: string,
   jobId: string,
 ): Promise<StructuredJobData> {
+  if (!jobId) {
+    throw new JobFetchError(platform, "Keine Job-ID in der LinkedIn-URL gefunden. Bitte öffnen Sie eine konkrete Stellenanzeige.");
+  }
   const apiUrl = `https://www.linkedin.com/jobs-guest/jobs/api/jobPosting/${jobId}`;
 
   const response = await fetch(apiUrl, {
@@ -105,7 +108,7 @@ export async function fetchViaLinkedInGuestApi(
     ?? extractByRegex(html, /<title>([^<]+)<\/title>/i)
     ?? "Unbekannte Position";
 
-  const company = extractByRegex(html, /<a[^>]*class="[^"]*topcard-org-name-link[^"]*"[^>]*>([^<]+)<\/a>/i)
+  const company = extractByRegex(html, /<a[^>]*class="[^"]*topcard__org-name-link[^"]*"[^>]*>([^<]+)<\/a>/i)
     ?? extractByRegex(html, /class="[^"]*company-name[^"]*"[^>]*>([^<]+)</i)
     ?? "Unbekanntes Unternehmen";
 

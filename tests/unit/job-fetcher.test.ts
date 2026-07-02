@@ -31,24 +31,24 @@ const mockStepStoneHtml = `<!doctype html>
 </body>
 </html>`;
 
-const mockLinkedInJsonLdHtml = `<!doctype html>
+const mockLinkedInGuestApiHtml = `<!doctype html>
 <html>
 <head><title>Frontend Developer | LinkedIn</title></head>
 <body>
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "JobPosting",
-  "title": "Frontend Developer",
-  "description": "We are looking for a Frontend Developer with React experience.",
-  "datePosted": "2026-05-15",
-  "employmentType": "FULL_TIME",
-  "hiringOrganization": { "@type": "Organization", "name": "WebStar GmbH" },
-  "jobLocation": { "@type": "Place", "address": { "@type": "PostalAddress", "addressLocality": "München" } },
-  "identifier": "LI-67890",
-  "url": "https://www.linkedin.com/jobs/view/67890/"
-}
-</script>
+<section class="top-card-layout container-lined">
+  <div class="top-card-layout__card">
+    <a class="topcard__link" href="/jobs/view/frontend-developer-4012345678">
+      <h2 class="top-card-layout__title">Frontend Developer</h2>
+    </a>
+    <div class="topcard__flavor-row">
+      <a class="topcard__org-name-link" href="/company/webstar">WebStar GmbH</a>
+      <span class="topcard__flavor topcard__flavor--bullet">München</span>
+    </div>
+    <div class="description__text description__text--rich">
+      We are looking for a Frontend Developer with React experience.
+    </div>
+  </div>
+</section>
 </body>
 </html>`;
 
@@ -105,9 +105,9 @@ describe("fetchJobData", () => {
     expect(data.jobId).toBe("12345");
   });
 
-  it("fetches LinkedIn job via JSON-LD", async () => {
-    mockFetchOnce(200, mockLinkedInJsonLdHtml);
-    const data = await fetchJobData("https://www.linkedin.com/jobs/view/67890/");
+  it("fetches LinkedIn job via Guest API", async () => {
+    mockFetchOnce(200, mockLinkedInGuestApiHtml);
+    const data = await fetchJobData("https://www.linkedin.com/jobs/view/frontend-developer-4012345678");
     expect(data.title).toBe("Frontend Developer");
     expect(data.company).toBe("WebStar GmbH");
     expect(data.location).toBe("München");
@@ -161,7 +161,7 @@ describe("fetchViaLinkedInGuestApi", () => {
 <html>
 <body>
 <h2 class="top-card-layout__title">Senior Data Scientist</h2>
-<a class="topcard-org-name-link" href="/company/acme">Acme Analytics</a>
+<a class="topcard__org-name-link" href="/company/acme">Acme Analytics</a>
 <div class="description__text">
   <p>We need a data scientist with Python and ML experience.</p>
 </div>
