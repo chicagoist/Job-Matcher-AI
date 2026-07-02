@@ -1,26 +1,22 @@
 import type { AnalysisResult, HistoryEntry } from "../../shared/types.js";
 import { DEFAULTS } from "../../shared/constants.js";
-import { dataUrlToBase64, detectMime, cryptoRandomId } from "../../shared/utils.js";
+import { cryptoRandomId, dataUrlToBase64 } from "../../shared/utils.js";
 import { callGemini, type GeminiPart } from "./gemini-client.js";
-import { callOllama } from "./ollama-client.js";
-import { extractPdfText } from "./pdf-utils.js";
-import { SYSTEM_PROMPT, buildJobAnalysisPrompt } from "./prompts.js";
 import { parseAnalysis } from "./result-parser.js";
-import { MissingApiKeyError, MissingCvError, GeminiBadRequestError } from "./errors.js";
+import { BadRequestError, MissingApiKeyError } from "./errors.js";
 import {
-  getApiKey,
-  getOllamaHost,
   getProvider,
-  getCv,
   getModel,
   getThreshold,
+  getApiKey,
   appendHistory,
-  getAllowCloudFallback,
   setLastUsedProvider,
-  getLastUsedProvider,
 } from "../../shared/storage.js";
 import { fetchJobData } from "./job-fetcher.js";
 import { detectPlatform, getDisplayName } from "./platform-detector.js";
+import type { AnalysisProvider } from "./analysis-provider.js";
+import { OllamaProvider } from "./providers/ollama-provider.js";
+import { GeminiProvider } from "./providers/gemini-provider.js";
 
 export interface AnalyzeArgs {
   tabId: number;
@@ -36,103 +32,21 @@ export async function analyzeJob(args: AnalyzeArgs): Promise<{
   usedFallback: boolean;
   usedProvider: string;
 }> {
-  const provider = await getProvider();
-
-  const [model, threshold] = await Promise.all([getModel(), getThreshold()]);
-
+  const providerName = await getProvider();
+  const model = await getModel();
+  const threshold = await getThreshold();
   const job = await resolveJobText(args);
 
-  let responseText: string;
-  let usedModel: string;
-  let usedProvider = provider;
-  let usedFallback = false;
+  const impl = providerName === "ollama"
+    ? (new OllamaProvider(model) as AnalysisProvider)
+    : new GeminiProvider(model);
 
-  if (provider === "ollama") {
-    const cv = await getCv();
-    if (!cv) throw new MissingCvError();
+  const response = await impl.analyze(job, threshold);
+  const result = parseAnalysis(response.text);
 
-    const host = await getOllamaHost();
-    const cvText = await extractPdfText(cv.dataUrl);
+  const usedProvider = response.usedFallback ? "gemini-fallback" : providerName;
 
-    const userContent = [
-      buildJobAnalysisPrompt(threshold),
-      `STELLENANZEIGE (Quelle: ${job.source || "Unbekannt"}):\n${job.text}`,
-      `LEBENSLAUF (Text aus PDF extrahiert):\n${cvText}`,
-    ].join("\n\n");
-
-    try {
-      const response = await callOllama({
-        host,
-        model,
-        systemPrompt: SYSTEM_PROMPT,
-        userContent,
-      });
-      responseText = response.text;
-      usedModel = response.model;
-    } catch (ollamaErr) {
-      const allowFallback = await getAllowCloudFallback();
-      if (!allowFallback) throw ollamaErr;
-
-      const apiKey = await getApiKey();
-      if (!apiKey) throw ollamaErr;
-
-      const userParts: GeminiPart[] = [
-        { text: buildJobAnalysisPrompt(threshold) },
-        { text: `STELLENANZEIGE (Quelle: ${job.source || "Unbekannt"}):\n${job.text}` },
-        {
-          inline_data: {
-            mime_type: detectMime(cv.dataUrl),
-            data: dataUrlToBase64(cv.dataUrl),
-          },
-        },
-        { text: "Hinweis: Der Lebenslauf wurde als PDF-Datei oben angehängt." },
-      ];
-
-      const geminiResponse = await callGemini({
-        apiKey,
-        model,
-        systemInstruction: SYSTEM_PROMPT,
-        userParts,
-      });
-
-      responseText = geminiResponse.text;
-      usedModel = geminiResponse.model;
-      usedProvider = "gemini-fallback";
-      usedFallback = true;
-    }
-  } else {
-    const apiKey = await getApiKey();
-    if (!apiKey) throw new MissingApiKeyError();
-
-    const cv = await getCv();
-    if (!cv) throw new MissingCvError();
-
-    const userParts: GeminiPart[] = [
-      { text: buildJobAnalysisPrompt(threshold) },
-      { text: `STELLENANZEIGE (Quelle: ${job.source || "Unbekannt"}):\n${job.text}` },
-      {
-        inline_data: {
-          mime_type: detectMime(cv.dataUrl),
-          data: dataUrlToBase64(cv.dataUrl),
-        },
-      },
-      { text: "Hinweis: Der Lebenslauf wurde als PDF-Datei oben angehängt." },
-    ];
-
-    const response = await callGemini({
-      apiKey,
-      model,
-      systemInstruction: SYSTEM_PROMPT,
-      userParts,
-    });
-
-    responseText = response.text;
-    usedModel = response.model;
-  }
-
-  const result = parseAnalysis(responseText);
-
-  if (usedProvider !== provider) {
+  if (usedProvider !== providerName) {
     await setLastUsedProvider(usedProvider);
   }
 
@@ -147,13 +61,18 @@ export async function analyzeJob(args: AnalyzeArgs): Promise<{
   };
   await appendHistory(entry);
 
-  return { result, model: usedModel, threshold, usedFallback, usedProvider };
+  return { result, model: response.model, threshold, usedFallback: response.usedFallback, usedProvider };
 }
 
 export async function solveAudio(audioDataUrl: string, mimeType: string): Promise<{
   text: string;
   model: string;
 }> {
+  const provider = await getProvider();
+  if (provider !== "gemini") {
+    throw new BadRequestError("Sprachaufnahme wird nur mit Gemini unterstützt.");
+  }
+
   const apiKey = await getApiKey();
   if (!apiKey) throw new MissingApiKeyError();
 
@@ -216,12 +135,12 @@ async function resolveJobText(args: AnalyzeArgs): Promise<{
   }
 
   if (!tabUrl) {
-    throw new GeminiBadRequestError("Keine aktive Job-Seite gefunden.");
+    throw new BadRequestError("Keine aktive Job-Seite gefunden.");
   }
 
   const platform = detectPlatform(tabUrl);
   if (!platform) {
-    throw new GeminiBadRequestError(
+    throw new BadRequestError(
       "Diese Seite wird nicht als Job-Plattform erkannt. Bitte fügen Sie die Stellenanzeige manuell ein.",
     );
   }
