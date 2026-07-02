@@ -1,5 +1,5 @@
 import type { AnalysisResult } from "../../shared/types.js";
-import { GeminiBadRequestError, GeminiServerError } from "./errors.js";
+import { BadRequestError, ServerError } from "./errors.js";
 
 export function parseAnalysis(text: string): AnalysisResult {
   const cleaned = stripCodeFence(text);
@@ -7,16 +7,16 @@ export function parseAnalysis(text: string): AnalysisResult {
   try {
     parsed = JSON.parse(cleaned);
   } catch {
-    throw new GeminiServerError("Antwort des Modells war kein gültiges JSON.");
+    throw new ServerError("Antwort des Modells war kein gültiges JSON.");
   }
   if (!parsed || typeof parsed !== "object") {
-    throw new GeminiServerError("Antwort des Modells war kein JSON-Objekt.");
+    throw new ServerError("Antwort des Modells war kein JSON-Objekt.");
   }
   const obj = parsed as Record<string, unknown>;
 
   const score = toScore(obj.score);
   if (score === null) {
-    throw new GeminiBadRequestError("Bewertung fehlt oder liegt außerhalb von 1-10.");
+    throw new BadRequestError("Bewertung fehlt oder liegt außerhalb von 1-10.");
   }
 
   const reasoning = typeof obj.reasoning === "string" ? obj.reasoning.trim() : "";
