@@ -6,8 +6,10 @@ import {
   setOllamaHost,
   getProvider,
   setProvider,
-  setModel,
-  getModel,
+  getOllamaModel,
+  setOllamaModel,
+  getGeminiModel,
+  setGeminiModel,
   setThreshold,
   getThreshold,
   getCv,
@@ -55,12 +57,10 @@ async function init(): Promise<void> {
   const host = await getOllamaHost();
   ollamaHostInput.value = host;
 
-  const currentModel = await getModel();
-  await populateOllamaModels(ollamaModelSelect, host, currentModel);
+  const [ollamaModel, geminiModel] = await Promise.all([getOllamaModel(), getGeminiModel()]);
+  await populateOllamaModels(ollamaModelSelect, host, ollamaModel);
   const geminiModelSelect = document.getElementById("geminiModel") as HTMLSelectElement;
-  if (currentModel.startsWith("gemini-") || currentModel.startsWith("gemma-")) {
-    geminiModelSelect.value = currentModel;
-  }
+  geminiModelSelect.value = geminiModel;
 
   const allowFallback = await getAllowCloudFallback();
   allowCloudFallbackCheckbox.checked = allowFallback;
@@ -81,9 +81,11 @@ async function init(): Promise<void> {
     await setProvider(providerSelect.value);
     toggleProviderSections(providerSelect.value, ollamaSection, geminiSection);
     if (providerSelect.value === "gemini") {
-      await setModel("gemini-2.5-flash-lite");
+      await setGeminiModel(DEFAULTS.geminiModel);
+      geminiModelSelect.value = DEFAULTS.geminiModel;
     } else {
-      await setModel(DEFAULTS.model);
+      await setOllamaModel(DEFAULTS.ollamaModel);
+      ollamaModelSelect.value = DEFAULTS.ollamaModel;
     }
   });
 
@@ -120,11 +122,11 @@ async function init(): Promise<void> {
   });
 
   ollamaModelSelect.addEventListener("change", async () => {
-    await setModel(ollamaModelSelect.value);
+    await setOllamaModel(ollamaModelSelect.value);
   });
 
   geminiModelSelect.addEventListener("change", async () => {
-    await setModel(geminiModelSelect.value);
+    await setGeminiModel(geminiModelSelect.value);
   });
 
   allowCloudFallbackCheckbox.addEventListener("change", async () => {
@@ -203,7 +205,7 @@ async function populateOllamaModels(
       }
       if (!select.value && models.length > 0) {
         select.options[0].selected = true;
-        await setModel(select.value);
+        await setOllamaModel(select.value);
       }
     }
   } catch {
