@@ -62,3 +62,44 @@
 - **Reason**: Firefox's activeTab permission may not cover chrome.tabs.get from background message listener; previous code had this fallback
 - **Consequences considered**: If both fail, shows "Keine aktive Job-Seite gefunden" — same as before
 - **Status after**: WORKING
+
+## 2026-07-02 — Architecture Separation (Strategy Pattern)
+
+### File: `src/background/lib/analysis-provider.ts` (NEW)
+- **Status before**: NEW
+- **Change**: Created AnalysisProvider interface with analyze(job, threshold) method + JobText / AnalysisResponse types
+- **Reason**: Standard interface so cover-letter.ts dispatches to either provider without knowing internals
+- **Status after**: WORKING
+
+### File: `src/background/lib/providers/ollama-provider.ts` (NEW)
+- **Status before**: NEW
+- **Change**: Extracted Ollama analysis path — own CV extraction via pdf-utils, callOllama, fallback-to-Gemini logic, AnalysisResponse with usedFallback
+- **Reason**: Encapsulate all Ollama-specific handling in one class; Gemini code paths never see Ollama errors
+- **Status after**: WORKING
+
+### File: `src/background/lib/providers/gemini-provider.ts` (NEW)
+- **Status before**: NEW
+- **Change**: Extracted Gemini analysis path — own CV handling as inline_data, callGemini, no fallback logic
+- **Reason**: Encapsulate all Gemini-specific handling in one class
+- **Status after**: WORKING
+
+### File: `src/background/lib/cover-letter.ts`
+- **Status before**: WORKING
+- **Change**: Refactored analyzeJob() as thin dispatcher — reads provider, instantiates OllamaProvider or GeminiProvider, delegates analyze() call, parses result, stores history. solveAudio() checks provider === "gemini", throws BadRequestError otherwise
+- **Reason**: Remove coupled if/else branching; prepare for future providers; make code testable via interface
+- **Consequences considered**: All public API (return types, error messages) preserved; solveAudio now throws BadRequestError instead of letting Gemini's MissingApiKeyError propagate if user tries audio with Ollama
+- **Status after**: WORKING
+
+### File: `src/shared/constants.ts`, `src/shared/storage.ts`
+- **Status before**: WORKING
+- **Change**: Split single model storage into ollamaModel/geminiModel with separate keys + DEFAULTS. getModel()/setModel() remain as provider-aware proxies. getOllamaModel()/setOllamaModel()/getGeminiModel()/setGeminiModel() added. Auto-migration from old "model" key via fallback chain
+- **Reason**: Provider switch should not lose the other provider's model preference; each provider keeps its own last-used model
+- **Consequences considered**: Old "model" key remains as migration source; getModel() behavior unchanged (returns current provider's model); setModel() writes to correct sub-key
+- **Status after**: WORKING
+
+### File: `src/options/options.ts`
+- **Status before**: WORKING
+- **Change**: Replaced getModel()/setModel() with getOllamaModel()/setOllamaModel()/getGeminiModel()/setGeminiModel(). Provider switch now sets DEFAULTS.ollamaModel or DEFAULTS.geminiModel into their respective storage keys
+- **Reason**: Options page must preserve each provider's model independently
+- **Consequences considered**: No functional change for user — model selectors work identically
+- **Status after**: WORKING
