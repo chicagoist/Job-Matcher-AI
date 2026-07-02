@@ -103,3 +103,33 @@
 - **Reason**: Options page must preserve each provider's model independently
 - **Consequences considered**: No functional change for user — model selectors work identically
 - **Status after**: WORKING
+
+## 2026-07-02 — LinkedIn Fix
+
+### File: `src/background/lib/platform-detector.ts:16`
+- **Status before**: BROKEN (LinkedIn URL regex `/\/jobs\/view\/(\d+)\/?/` only matches old format `/jobs/view/ID`, not new format `/jobs/view/SLUG-ID`)
+- **Change**: Updated LINKEDIN_JOBID_PATTERN to `/\/jobs\/view\/(?:.*?)(\d{7,})/` which matches both old and new URL formats
+- **Reason**: LinkedIn changed URL format from `/jobs/view/ID` to `/jobs/view/name-ID`; without the fix, job ID is never extracted from real LinkedIn job pages
+- **Consequences considered**: Uses minimum 7 digits to avoid matching small numbers in job titles; all LinkedIn job IDs are 10 digits
+- **Status after**: WORKING
+
+### File: `src/background/lib/platform-detector.ts:50-56`
+- **Status before**: BROKEN (used `strategy: jobId ? "json-ld" : "guest-api"` for LinkedIn)
+- **Change**: Changed LinkedIn strategy to always use `"guest-api"` regardless of jobId availability
+- **Reason**: LinkedIn no longer embeds `<script type="application/ld+json">` with `@type: JobPosting` in server-rendered pages; JSON-LD strategy always fails with "Keine JobPosting-JSON-LD-Daten gefunden"
+- **Consequences considered**: Guest API endpoint `https://www.linkedin.com/jobs-guest/jobs/api/jobPosting/{id}` still returns full job details; tested with real job ID 4342501529
+- **Status after**: WORKING
+
+### File: `src/background/lib/job-fetcher.ts:108`
+- **Status before**: BROKEN (company regex `topcard-org-name-link` uses single dash, but LinkedIn changed class to `topcard__org-name-link` with double underscore)
+- **Change**: Updated regex from `topcard-org-name-link` to `topcard__org-name-link`
+- **Reason**: LinkedIn changed CSS class name; company extraction always returned "Unbekanntes Unternehmen"
+- **Consequences considered**: Only affects LinkedIn guest API HTML parsing; other regexes (title, location, description) still match
+- **Status after**: WORKING
+
+### File: `src/background/lib/job-fetcher.ts:88-91`
+- **Status before**: UNKNOWN (no guard for missing jobId; would fetch `/jobs-guest/jobs/api/jobPosting/undefined` and return 404)
+- **Change**: Added early check — if jobId is falsy, throw `JobFetchError` with a clear message
+- **Reason**: Prevent confusing 404 error when user is on LinkedIn search page without a specific job selected
+- **Consequences considered**: Error message now tells user to open a specific job posting
+- **Status after**: WORKING
